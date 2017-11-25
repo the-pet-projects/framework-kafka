@@ -6,19 +6,19 @@ namespace PetProject.Framework.Kafka.Producer
     using System.Threading.Tasks;
     using Confluent.Kafka;
     using Confluent.Kafka.Serialization;
+    using Exceptions;
     using Newtonsoft.Json;
     using Topics;
 
-    public class Producer<TTopic> : IProducer, IDisposable
-        where TTopic : ITopicContract
+    public class Producer<TTopic> : IProducer<TTopic>
     {
-        private Dictionary<string, object> Configuration = new Dictionary<string, object>();
+        private readonly Dictionary<string, object> configuration = new Dictionary<string, object>();
 
-        private Producer<string, string> producer;
+        private readonly Producer<string, string> producer;
 
-        private ITopicContract Topic;
+        private readonly ITopicContract topic;
 
-        private bool disposed = false;
+        private bool disposed;
 
         public Producer(string bootstrapServers)
         {
@@ -27,17 +27,35 @@ namespace PetProject.Framework.Kafka.Producer
                 throw new ArgumentException(nameof(bootstrapServers));
             }
 
-            this.Configuration.Add("bootstrap.servers", bootstrapServers);
+            this.configuration.Add("bootstrap.servers", bootstrapServers);
 
-            this.producer = new Producer<string, string>(this.Configuration, new StringSerializer(Encoding.UTF8), new StringSerializer(Encoding.UTF8));
+            this.producer = new Producer<string, string>(this.configuration, new StringSerializer(Encoding.UTF8), new StringSerializer(Encoding.UTF8));
 
-            this.Topic = Activator.CreateInstance<TTopic>();
+            this.topic = Activator.CreateInstance<TTopic>() as ITopicContract;
         }
 
-        public async Task ProduceAsync<TMessage>(TMessage message)
+        public async Task Produce<TMessage>(TMessage message)
             where TMessage : IMessageContract
         {
-            await this.producer.ProduceAsync(this.Topic.GetTopicName(), message.GetPartitionKey(), JsonConvert.SerializeObject(message));
+            var topicName = this.topic.TopicFullName;
+            var partitionKey = message.GetPartitionKey();
+            var report = await this.producer.ProduceAsync(topicName, partitionKey, JsonConvert.SerializeObject(message));
+
+            if (report.Error.HasError)
+            {
+                throw new ProducerErrorException<TMessage>(topicName, message, report.Timestamp, report.Error);
+            }
+        }
+
+        public async Task<Message<string, string>> ProduceAsync<TMessage>(TMessage message)
+            where TMessage : IMessageContract
+        {
+            var topicName = this.topic.TopicFullName;
+            var partitionKey = message.GetPartitionKey();
+
+            var deliveryReport = await this.producer.ProduceAsync(topicName, partitionKey, JsonConvert.SerializeObject(message));
+
+            return deliveryReport;
         }
 
         public void Dispose()
@@ -48,7 +66,7 @@ namespace PetProject.Framework.Kafka.Producer
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposed)
+            if (this.disposed)
             {
                 return;
             }
@@ -58,7 +76,7 @@ namespace PetProject.Framework.Kafka.Producer
                 this.Dispose();
             }
 
-            disposed = true;
+            this.disposed = true;
         }
     }
 }

@@ -2,6 +2,8 @@
 {
     public interface ITopicContract
     {
-        string GetTopicName();
+        TopicBuilder SetTopicName();
+
+        string TopicFullName { get; }
     }
 }

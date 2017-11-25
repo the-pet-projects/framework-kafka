@@ -16,7 +16,7 @@
 
         public byte[] Serialize(T data)
         {
-            return this.stringSerializer.Serialize(JsonConvert.SerializeObject((object) data));
+            return this.stringSerializer.Serialize(JsonConvert.SerializeObject((object)data));
         }
 
         public T Deserialize(Message<Null, string> message)

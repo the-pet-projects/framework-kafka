@@ -1,10 +1,11 @@
 ﻿namespace PetProject.Framework.Kafka.Producer
 {
+    using System;
     using System.Threading.Tasks;
     using Topics;
 
-    internal interface IProducer
+    internal interface IProducer<TTopic> : IDisposable
     {
-        Task ProduceAsync<TMessage>(TMessage message) where TMessage : IMessageContract;
+        Task Produce<TMessage>(TMessage message) where TMessage : IMessageContract;
     }
 }
