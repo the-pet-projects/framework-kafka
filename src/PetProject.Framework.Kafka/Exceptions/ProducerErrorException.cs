@@ -6,7 +6,7 @@ namespace PetProject.Framework.Kafka.Exceptions
     public class ProducerErrorException<TMessage> : Exception
     {
         public ProducerErrorException(Error error)
-            :base("Producer Error. Check errors for more details.")
+            : base("Producer Error. Check errors for more details.")
         {
             this.Error = error;
         }

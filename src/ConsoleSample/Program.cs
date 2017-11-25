@@ -14,7 +14,7 @@
 
         private static async Task MainAsync(string[] args)
         {
-            var producer = new Producer<TestTopic<SimpleMessage>>("marx-petprojects.westeurope.cloudapp.azure.com:9092");
+            var producer = new Producer<TestTopic<SimpleMessage>>("localhost:9092");
 
             for (var i = 0; i < 10; i++)
             {
@@ -28,38 +28,38 @@
                 }
             }
         }
-    }
 
-    internal class TestTopic<TMessage> : ITopicContract
-    {
-        public TopicBuilder SetTopicName()
+        internal class TestTopic<TMessage> : ITopicContract
         {
-            return new TopicBuilder($"{typeof(TMessage).FullName}", MessageType.Events)
-                .WithApplication("console-app")
-                .WithVersion(1);
+            public string TopicFullName => this.SetTopicName().TopicFullName;
+
+            public TopicBuilder SetTopicName()
+            {
+                return new TopicBuilder($"{typeof(TMessage).FullName}", MessageType.Events)
+                    .WithApplication("console-app")
+                    .WithVersion(1);
+            }
         }
 
-        public string TopicFullName => this.SetTopicName().TopicFullName;
-    }
-
-    internal class SimpleMessage : IMessageContract
-    {
-        public Type MessageType => typeof(SimpleMessage);
-
-        public string Type { get; set; }
-
-        public string Message { get; set; }
-
-        public string GetPartitionKey()
+        internal class SimpleMessage : IMessageContract
         {
-            return $"{this.Type}";
+            public Type MessageType => typeof(SimpleMessage);
+
+            public string Type { get; set; }
+
+            public string Message { get; set; }
+
+            public string GetPartitionKey()
+            {
+                return $"{this.Type}";
+            }
         }
-    }
 
-    internal class DerivedMessage : SimpleMessage
-    {
-        public new Type MessageType => typeof(DerivedMessage);
+        internal class DerivedMessage : SimpleMessage
+        {
+            public new Type MessageType => typeof(DerivedMessage);
 
-        public bool Derived { get; set; }
+            public bool Derived { get; set; }
+        }
     }
 }
