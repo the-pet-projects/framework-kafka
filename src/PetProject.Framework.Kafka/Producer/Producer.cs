@@ -1,9 +1,9 @@
 namespace PetProject.Framework.Kafka.Producer
 {
     using System;
-    using System.Collections.Generic;
     using System.Text;
     using System.Threading.Tasks;
+    using Configurations;
     using Confluent.Kafka;
     using Confluent.Kafka.Serialization;
     using Exceptions;
@@ -12,24 +12,15 @@ namespace PetProject.Framework.Kafka.Producer
 
     public class Producer<TTopic> : IProducer<TTopic>
     {
-        private readonly Dictionary<string, object> configuration = new Dictionary<string, object>();
-
         private readonly Producer<string, string> producer;
 
         private readonly ITopicContract topic;
 
         private bool disposed;
 
-        public Producer(string bootstrapServers)
+        public Producer(ProducerConfiguration configuration)
         {
-            if (string.IsNullOrWhiteSpace(bootstrapServers))
-            {
-                throw new ArgumentException(nameof(bootstrapServers));
-            }
-
-            this.configuration.Add("bootstrap.servers", bootstrapServers);
-
-            this.producer = new Producer<string, string>(this.configuration, new StringSerializer(Encoding.UTF8), new StringSerializer(Encoding.UTF8));
+            this.producer = new Producer<string, string>(configuration.GetConfigurations(), new StringSerializer(Encoding.UTF8), new StringSerializer(Encoding.UTF8));
 
             this.topic = Activator.CreateInstance<TTopic>() as ITopicContract;
         }

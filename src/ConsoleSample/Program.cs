@@ -1,7 +1,9 @@
 ﻿namespace ConsoleSample
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
+    using PetProject.Framework.Kafka.Configurations;
     using PetProject.Framework.Kafka.Producer;
     using PetProject.Framework.Kafka.Topics;
 
@@ -14,7 +16,9 @@
 
         private static async Task MainAsync(string[] args)
         {
-            var producer = new Producer<TestTopic<SimpleMessage>>("localhost:9092");
+            var producerConfiguration = new ProducerConfiguration("test-client", new List<string> { "localhost:9092" });
+
+            var producer = new Producer<TestTopic<SimpleMessage>>(producerConfiguration);
 
             for (var i = 0; i < 10; i++)
             {
