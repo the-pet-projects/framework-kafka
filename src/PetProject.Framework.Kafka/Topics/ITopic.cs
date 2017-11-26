@@ -1,6 +1,6 @@
 ﻿namespace PetProject.Framework.Kafka.Topics
 {
-    public interface ITopicContract
+    public interface ITopic<TMessage>
     {
         string TopicFullName { get; }
 

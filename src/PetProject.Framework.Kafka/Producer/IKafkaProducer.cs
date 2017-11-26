@@ -5,12 +5,11 @@
     using Confluent.Kafka;
     using Topics;
 
-    internal interface IKafkaProducer<TTopic, TMessage> : IDisposable 
-        where TMessage : IMessageContract
-        where TTopic : ITopicContract
+    internal interface IKafkaProducer<TBaseMessage> : IDisposable 
+        where TBaseMessage : IMessage
     {
-        Task Produce(TMessage message);
+        Task Produce<TMessage>(TMessage message) where TMessage : IMessage;
 
-        Task<Message<string, TMessage>> ProduceAsync(TMessage message);
+        Task<Message<string, MessageWrapper<TBaseMessage>>> ProduceAsync<TMessage>(TMessage message) where TMessage : IMessage;
     }
 }

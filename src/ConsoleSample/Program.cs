@@ -1,69 +1,80 @@
-﻿namespace ConsoleSample
+﻿namespace ConsoleConsumer
 {
     using System;
     using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using PetProject.Framework.Kafka.Configurations.Producer;
-    using PetProject.Framework.Kafka.Producer;
-    using PetProject.Framework.Kafka.Topics;
+    using Contracts;
+    using Microsoft.Extensions.DependencyInjection;
+    using Newtonsoft.Json;
+    using PetProject.Framework.Kafka.Configurations.Consumer;
+    using PetProject.Framework.Kafka.Consumer;
 
-    internal class Program
+    internal partial class Program
     {
         public static void Main(string[] args)
         {
-            MainAsync(args).Wait();
-        }
+            Console.WriteLine("Consumer");
 
-        private static async Task MainAsync(string[] args)
-        {
-            var producerConfiguration = new ProducerConfiguration("test-client", new List<string> { "localhost:9092" });
+            var servicesCollection = new ServiceCollection();
 
-            var producer = new KafkaProducer<TestTopic<SimpleMessage>, SimpleMessage>(producerConfiguration);
+            servicesCollection.AddSingleton<IConsumerConfiguration>(
+                new ConsumerConfiguration(
+                    "group01",
+                    "consumer01",
+                    new List<string>
+                    {
+                        "marx-petprojects.westeurope.cloudapp.azure.com:9092"
+                    }
+                    ).SetPollTimeout(10000));
 
-            for (var i = 0; i < 10; i++)
+            servicesCollection.AddSingleton<IConsumer<ItemCommandsV1>, TestConsumer>();
+
+            var serviceProvider = servicesCollection.BuildServiceProvider();
+
+            var consumer = serviceProvider.GetService<IConsumer<ItemCommandsV1>>();
+
+            consumer.ConsumerHandlerFor<ItemCommandsV1>((message) =>
             {
-                if ((i % 2) == 0)
-                {
-                    await producer.ProduceAsync(new DerivedMessage { Type = "Event", Message = $"text-{i}", Derived = true });
-                }
-                else
-                {
-                    await producer.ProduceAsync(new SimpleMessage { Type = "None", Message = $"text-{i}" });
-                }
+                HandleGenericItemCommands(message);
+                CommitAsync(consumer);
+            });
+
+            consumer.ConsumerHandlerFor<CreateItemV1>((message) =>
+            {
+                HandleCreateItem(message);
+                CommitAsync(consumer);
+            });
+
+            var initiated = consumer.StartConsuming();
+
+            Console.WriteLine(initiated ? "Started!!" : "Not Started!!");
+
+            var cancelled = false;
+            Console.CancelKeyPress += (_, e) =>
+            {
+                e.Cancel = true; // prevent the process from terminating.
+                cancelled = true;
+            };
+
+            Console.WriteLine("Ctrl-C to exit.");
+            while (!cancelled)
+            {
+                consumer.Dispose();
             }
         }
 
-        internal class TestTopic<TMessage> : ITopicContract
+        private static void HandleGenericItemCommands(ItemCommandsV1 message)
         {
-            public string TopicFullName => this.SetTopicName().TopicFullName;
-
-            public TopicBuilder SetTopicName()
-            {
-                return new TopicBuilder($"{typeof(TMessage).FullName}", MessageType.Events)
-                    .WithApplication("console-app")
-                    .WithVersion(1);
-            }
+            Console.WriteLine($"Message: {JsonConvert.SerializeObject(message)} |  Partition: {message.GetPartitionKey()}");
         }
 
-        internal class SimpleMessage : IMessageContract
+        private static void HandleCreateItem(CreateItemV1 message)
         {
-            public Type MessageType => typeof(SimpleMessage);
-
-            public string Type { get; set; }
-
-            public string Message { get; set; }
-
-            public string GetPartitionKey()
-            {
-                return $"{this.Type}";
-            }
+            Console.WriteLine($"Message: {JsonConvert.SerializeObject(message)} |  Partition: {message.GetPartitionKey()} | Derived: {message.Derived}");
         }
 
-        internal class DerivedMessage : SimpleMessage
+        private static void CommitAsync(IConsumer<ItemCommandsV1> consumer)
         {
-            public new Type MessageType => typeof(DerivedMessage);
-
-            public bool Derived { get; set; }
+            consumer.CommitAsync();
         }
     }
 }

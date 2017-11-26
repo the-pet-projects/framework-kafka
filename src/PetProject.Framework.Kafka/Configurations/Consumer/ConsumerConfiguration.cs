@@ -3,11 +3,10 @@ namespace PetProject.Framework.Kafka.Configurations.Consumer
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Topics;
 
     public class ConsumerConfiguration : IConsumerConfiguration
     {
-        public ConsumerConfiguration(string groupId, string clientId, IList<string> bootstrapServers, ITopicContract topic)
+        public ConsumerConfiguration(string groupId, string clientId, IList<string> bootstrapServers)
         {
             if (string.IsNullOrWhiteSpace(groupId))
             {
@@ -30,13 +29,9 @@ namespace PetProject.Framework.Kafka.Configurations.Consumer
                 { "client.id", clientId },
                 { "group.id", groupId }
             };
-
-            this.Topic = topic;
         }
 
         public Dictionary<string, object> Configurations { get; }
-
-        public ITopicContract Topic { get; }
 
         public int? PollTimeout { get; private set; }
 

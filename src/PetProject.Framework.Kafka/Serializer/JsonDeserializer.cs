@@ -18,5 +18,10 @@
             var str = this.stringDeserializer.Deserialize(data);
             return JsonConvert.DeserializeObject<T>(str);
         }
+
+        public T Deserialize(string message)
+        {
+            return JsonConvert.DeserializeObject<T>(message);
+        }
     }
 }

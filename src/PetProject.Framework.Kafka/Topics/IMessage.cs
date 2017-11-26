@@ -1,11 +1,7 @@
 ﻿namespace PetProject.Framework.Kafka.Topics
 {
-    using System;
-
-    public interface IMessageContract
+    public interface IMessage
     {
-        Type MessageType { get; }
-
         string GetPartitionKey();
     }
 }

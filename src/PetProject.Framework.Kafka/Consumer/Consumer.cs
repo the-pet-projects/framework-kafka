@@ -1,31 +1,40 @@
 namespace PetProject.Framework.Kafka.Consumer
 {
     using System;
+    using System.Collections.Generic;
+    using System.Text;
     using System.Threading;
-    using System.Threading.Tasks;
     using Configurations.Consumer;
     using Confluent.Kafka;
-    using Serializer;
+    using Confluent.Kafka.Serialization;
+    using Newtonsoft.Json;
     using Topics;
 
     public abstract class Consumer<TBaseMessage> : IConsumer<TBaseMessage>
-        where TBaseMessage : IMessageContract
+        where TBaseMessage : IMessage
     {
-        private static readonly TimeSpan PollTimeout = TimeSpan.FromSeconds(2);
-
         private readonly IConsumerConfiguration configuration;
-        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource tokenSource;
 
-        private readonly Consumer<string, TBaseMessage> confluentConsumer;
+        private readonly Dictionary<Type, Delegate> messageHandlers;
 
-        private readonly object lockObj = new object();
+        private Consumer<string, string> confluentConsumer;
 
-        private Task task;
+        private readonly ITopic<TBaseMessage> topic;
 
-        protected Consumer(IConsumerConfiguration configuration)
+        private readonly JsonSerializerSettings settings;
+
+        protected Consumer(ITopic<TBaseMessage> topic, IConsumerConfiguration configuration)
         {
+            this.messageHandlers = new Dictionary<Type, Delegate>();
+            this.tokenSource = new CancellationTokenSource();
             this.configuration = configuration;
-            this.confluentConsumer = new Consumer<string, TBaseMessage>(this.configuration.GetConfigurations(), new JsonDeserializer<string>(), new JsonDeserializer<TBaseMessage>());
+            this.topic = topic;
+
+            this.settings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.Auto
+            };
         }
 
         /// <inheritdoc />
@@ -36,55 +45,48 @@ namespace PetProject.Framework.Kafka.Consumer
         /// </summary>
         public bool StartConsuming()
         {
-            lock (this.lockObj)
+            this.confluentConsumer = new Consumer<string, string>(
+                this.configuration.GetConfigurations(),
+                new StringDeserializer(Encoding.UTF8),
+                new StringDeserializer(Encoding.UTF8));
+
+            this.confluentConsumer.OnMessage += this.HandleMessage;
+
+            this.confluentConsumer.OnConsumeError += this.HandleOnConsumerError;
+
+            this.confluentConsumer.OnError += this.HandleError;
+
+            this.confluentConsumer.OnLog += this.HandleLogs;
+
+            this.confluentConsumer.OnStatistics += this.HandleStatistics;
+
+            this.confluentConsumer.Subscribe(this.topic.TopicFullName);
+
+            while (this.tokenSource != null && !this.tokenSource.IsCancellationRequested)
             {
-                if (this.task != null)
-                {
-                    return false;
-                }
-
-                // because Poll is synchronous it will block the thread that runs this task
-                // so it's better to create a task with LongRunning flag to let the task scheduler know
-                // that it can create a new dedicated thread for this task instead of allocating one from the default threadpool
-                this.task = Task.Factory.StartNew(
-                    () =>
-                    {
-                        this.confluentConsumer.Subscribe(this.configuration.Topic.TopicFullName);
-
-                        this.confluentConsumer.OnMessage += this.HandleMessage;
-
-                        this.confluentConsumer.OnConsumeError += this.HandleOnConsumerError;
-
-                        this.confluentConsumer.OnError += this.HandleError;
-
-                        this.confluentConsumer.OnLog += this.HandleLogs;
-
-                        this.confluentConsumer.OnStatistics += this.HandleStatistics;
-
-                        while (this.tokenSource != null && !this.tokenSource.IsCancellationRequested)
-                        {
-                            this.confluentConsumer.Poll(this.configuration.PollTimeout ?? 100);
-                        }
-                    },
-                    TaskCreationOptions.LongRunning);
-
-                return true;
+                this.confluentConsumer.Poll(this.configuration.PollTimeout ?? 100);
             }
+
+            return true;
+        }
+
+        public void ConsumerHandlerFor<TMessage>(Action<TMessage> handler)
+        {
+            this.messageHandlers[typeof(TMessage)] = handler;
         }
 
         public void Dispose()
         {
-            lock (this.lockObj)
+            this.tokenSource.Cancel();
+            this.tokenSource?.Dispose();
+
+            if (this.confluentConsumer == null)
             {
-                if (this.task == null)
-                {
-                    this.task = Task.CompletedTask;
-                }
+                return;
             }
 
-            this.tokenSource.Cancel();
-            this.task.Wait();
-            this.tokenSource?.Dispose();
+            this.confluentConsumer.Dispose();
+            this.confluentConsumer = null;
         }
 
         /// <inheritdoc />
@@ -122,13 +124,38 @@ namespace PetProject.Framework.Kafka.Consumer
         /// </summary>
         /// <param name="sender">Message sender.</param>
         /// <param name="message">Message envelope with the content to consume.</param>
-        protected abstract void HandleOnConsumerError(object sender, Message message);
+        protected abstract void HandleOnConsumerError(object sender, Confluent.Kafka.Message message);
 
         /// <summary>
         /// Must be implemented by the client in order to consumer messages and add custom treatment.
         /// </summary>
         /// <param name="sender">Message sender.</param>
         /// <param name="message">Message envelope with the content to consume.</param>
-        protected abstract void HandleMessage(object sender, Message<string, TBaseMessage> message);
+        protected void HandleMessage(object sender, Message<string, string> consumerMessage)
+        {
+            if (consumerMessage.Value == null)
+            {
+                return;
+            }
+
+            MessageWrapper wrappedMessage;
+            try
+            {
+                wrappedMessage = JsonConvert.DeserializeObject<MessageWrapper>(consumerMessage.Value, this.settings);
+            }
+            catch (Exception)
+            {
+                throw new Exception("Consumer error when deserializing.");
+            }
+
+            var type = Type.GetType(wrappedMessage.MessageType);
+
+            if (!this.messageHandlers.ContainsKey(type))
+            {
+                throw new Exception("An handler for this type of message does not exist. Please define one with ConsumerHandlerFor<> method!");
+            }
+
+            this.messageHandlers[type].DynamicInvoke(wrappedMessage.Message);
+        }
     }
 }

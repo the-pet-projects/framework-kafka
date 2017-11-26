@@ -1,15 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+VisualStudioVersion = 15.0.27004.2009
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PetProject.Framework.Kafka", "src\PetProject.Framework.Kafka\PetProject.Framework.Kafka.csproj", "{CCE8A4BC-4A0A-4E72-AB03-2FB1B2308649}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B8781380-7F4D-4927-81B7-49A311325677}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetProjects.Framework.Kafka.Tests", "test\PetProjects.Framework.Kafka.Tests\PetProjects.Framework.Kafka.Tests.csproj", "{D92CB0B5-D903-4ED5-9139-3FBD91997249}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PetProjects.Framework.Kafka.Tests", "test\PetProjects.Framework.Kafka.Tests\PetProjects.Framework.Kafka.Tests.csproj", "{D92CB0B5-D903-4ED5-9139-3FBD91997249}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleSample", "src\ConsoleSample\ConsoleSample.csproj", "{928A43F0-C5D3-4B9C-90AC-DA506CA456B6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleConsumer", "src\ConsoleSample\ConsoleConsumer.csproj", "{928A43F0-C5D3-4B9C-90AC-DA506CA456B6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleProducer", "src\ConsoleProducer\ConsoleProducer.csproj", "{EC5496BB-6B08-48CC-8CC7-34DDA3C2284C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "src\Contracts\Contracts.csproj", "{8FCDF6D3-B6B1-4C13-9A22-A868A5F27B6B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +33,14 @@ Global
 		{928A43F0-C5D3-4B9C-90AC-DA506CA456B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{928A43F0-C5D3-4B9C-90AC-DA506CA456B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{928A43F0-C5D3-4B9C-90AC-DA506CA456B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC5496BB-6B08-48CC-8CC7-34DDA3C2284C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC5496BB-6B08-48CC-8CC7-34DDA3C2284C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC5496BB-6B08-48CC-8CC7-34DDA3C2284C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC5496BB-6B08-48CC-8CC7-34DDA3C2284C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FCDF6D3-B6B1-4C13-9A22-A868A5F27B6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FCDF6D3-B6B1-4C13-9A22-A868A5F27B6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FCDF6D3-B6B1-4C13-9A22-A868A5F27B6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FCDF6D3-B6B1-4C13-9A22-A868A5F27B6B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

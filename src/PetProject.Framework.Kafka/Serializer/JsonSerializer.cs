@@ -8,14 +8,20 @@
     {
         private readonly ISerializer<string> stringSerializer;
 
+        private readonly JsonSerializerSettings settings;
+
         public JsonSerializer()
         {
             this.stringSerializer = new StringSerializer(Encoding.UTF8);
+            this.settings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.Auto
+            };
         }
 
         public byte[] Serialize(T data)
         {
-            return this.stringSerializer.Serialize(JsonConvert.SerializeObject((object)data));
+            return this.stringSerializer.Serialize(JsonConvert.SerializeObject((object)data, settings));
         }
     }
 }

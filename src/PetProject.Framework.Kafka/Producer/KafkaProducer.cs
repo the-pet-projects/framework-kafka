@@ -10,28 +10,35 @@ namespace PetProject.Framework.Kafka.Producer
     using Serializer;
     using Topics;
 
-    public class KafkaProducer<TTopic, TMessage> : IKafkaProducer<TTopic, TMessage>
-        where TMessage : IMessageContract
-        where TTopic : ITopicContract
+    public class KafkaProducer<TBaseMessage> : IKafkaProducer<TBaseMessage>
+        where TBaseMessage : IMessage
     {
-        private readonly Producer<string, TMessage> confluentProducer;
+        private readonly Producer<string, MessageWrapper<TBaseMessage>> confluentProducer;
 
-        private readonly ITopicContract topic;
+        private readonly ITopic<TBaseMessage> topic;
 
         private bool disposed;
 
-        public KafkaProducer(ProducerConfiguration configuration)
+        public KafkaProducer(ITopic<TBaseMessage> topic, ProducerConfiguration configuration)
         {
-            this.confluentProducer = new Producer<string, TMessage>(configuration.GetConfigurations(), new StringSerializer(Encoding.UTF8), new JsonSerializer<TMessage>());
+            this.confluentProducer = new Producer<string, MessageWrapper<TBaseMessage>>(configuration.GetConfigurations(), new StringSerializer(Encoding.UTF8), new JsonSerializer<MessageWrapper<TBaseMessage>>());
 
-            this.topic = Activator.CreateInstance<TTopic>();
+            this.topic = topic;
         }
 
-        public async Task Produce(TMessage message)
+        public async Task Produce<TMessage>(TMessage message)
+            where TMessage : IMessage
         {
             var topicName = this.topic.TopicFullName;
             var partitionKey = message.GetPartitionKey();
-            var report = await this.confluentProducer.ProduceAsync(topicName, partitionKey, message);
+
+            var wrappedMessage = new MessageWrapper<TBaseMessage>
+            {
+                MessageType = typeof(TMessage).FullName,
+                Message = message
+            };
+
+            var report = await this.confluentProducer.ProduceAsync(topicName, partitionKey, wrappedMessage);
 
             if (report.Error.HasError)
             {
@@ -39,12 +46,19 @@ namespace PetProject.Framework.Kafka.Producer
             }
         }
 
-        public async Task<Message<string, TMessage>> ProduceAsync(TMessage message)
+        public async Task<Message<string, MessageWrapper<TBaseMessage>>> ProduceAsync<TMessage>(TMessage message)
+            where TMessage : IMessage
         {
             var topicName = this.topic.TopicFullName;
             var partitionKey = message.GetPartitionKey();
 
-            var deliveryReport = await this.confluentProducer.ProduceAsync(topicName, partitionKey, message);
+            var wrappedMessage = new MessageWrapper<TBaseMessage>
+            {
+                MessageType = typeof(TMessage).AssemblyQualifiedName,
+                Message = message
+            };
+
+            var deliveryReport = await this.confluentProducer.ProduceAsync(topicName, partitionKey, wrappedMessage);
 
             return deliveryReport;
         }
