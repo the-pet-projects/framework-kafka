@@ -15,6 +15,9 @@ namespace PetProject.Framework.Kafka.Consumer
 
         private readonly IConsumerConfiguration configuration;
         private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+        private readonly Consumer<string, TBaseMessage> confluentConsumer;
+
         private readonly object lockObj = new object();
 
         private Task task;
@@ -22,13 +25,16 @@ namespace PetProject.Framework.Kafka.Consumer
         protected Consumer(IConsumerConfiguration configuration)
         {
             this.configuration = configuration;
+            this.confluentConsumer = new Consumer<string, TBaseMessage>(this.configuration.GetConfigurations(), new JsonDeserializer<string>(), new JsonDeserializer<TBaseMessage>());
         }
 
+        /// <inheritdoc />
         /// <summary>
-        /// Method to initiate the consumer. It will create a task in the background.
+        /// Method to initiate the consumer.
+        /// Messages must be committed manually.
+        /// Inititates a task in the backgroung with the LongRunning flag.
         /// </summary>
-        /// <returns></returns>
-        public bool Start()
+        public bool StartConsuming()
         {
             lock (this.lockObj)
             {
@@ -43,14 +49,21 @@ namespace PetProject.Framework.Kafka.Consumer
                 this.task = Task.Factory.StartNew(
                     () =>
                     {
-                        using (var consumer = new Consumer<string, TBaseMessage>(this.configuration.GetConfigurations(), new JsonDeserializer<string>(), new JsonDeserializer<TBaseMessage>()))
+                        this.confluentConsumer.Subscribe(this.configuration.Topic.TopicFullName);
+
+                        this.confluentConsumer.OnMessage += this.HandleMessage;
+
+                        this.confluentConsumer.OnConsumeError += this.HandleOnConsumerError;
+
+                        this.confluentConsumer.OnError += this.HandleError;
+
+                        this.confluentConsumer.OnLog += this.HandleLogs;
+
+                        this.confluentConsumer.OnStatistics += this.HandleStatistics;
+
+                        while (this.tokenSource != null && !this.tokenSource.IsCancellationRequested)
                         {
-                            consumer.Subscribe(this.configuration.Topic.TopicFullName);
-                            consumer.OnMessage += this.HandleMessage;
-                            while (this.tokenSource != null && !this.tokenSource.IsCancellationRequested)
-                            {
-                                consumer.Poll(this.configuration.PollTimeout ?? 100);
-                            }
+                            this.confluentConsumer.Poll(this.configuration.PollTimeout ?? 100);
                         }
                     },
                     TaskCreationOptions.LongRunning);
@@ -58,13 +71,6 @@ namespace PetProject.Framework.Kafka.Consumer
                 return true;
             }
         }
-
-        /// <summary>
-        /// Must be implemented by the client in order to consumer messages and add custom treatment.
-        /// </summary>
-        /// <param name="sender">Message sender.</param>
-        /// <param name="message">Message envelope with the content to consume.</param>
-        public abstract void HandleMessage(object sender, Message<string, TBaseMessage> message);
 
         public void Dispose()
         {
@@ -80,5 +86,49 @@ namespace PetProject.Framework.Kafka.Consumer
             this.task.Wait();
             this.tokenSource?.Dispose();
         }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Decorator around Confluent Consumer to commit messages asynchronously after success.
+        /// </summary>
+        public void CommitAsync()
+        {
+            this.confluentConsumer.CommitAsync();
+        }
+
+        /// <summary>
+        /// Method to add custom treatment to Consumer Statistics.
+        /// </summary>
+        /// <param name="sender">Message sender.</param>
+        /// <param name="statistics">Statistics returned from Confluent Consumer.</param>
+        protected abstract void HandleStatistics(object sender, string statistics);
+
+        /// <summary>
+        /// Method to add custom treatment to Consumer Logs.
+        /// </summary>
+        /// <param name="sender">Message sender.</param>
+        /// <param name="logMessage">Log Message object returned from Confluent Consumer.</param>
+        protected abstract void HandleLogs(object sender, LogMessage logMessage);
+
+        /// <summary>
+        /// Method to add custom treatment to Consumer Errors.
+        /// </summary>
+        /// <param name="sender">Message sender</param>
+        /// <param name="error">Error object returned from Confluent Consumer</param>
+        protected abstract void HandleError(object sender, Error error);
+
+        /// <summary>
+        /// Must be implemented by the client in order to add Errors while consuming.
+        /// </summary>
+        /// <param name="sender">Message sender.</param>
+        /// <param name="message">Message envelope with the content to consume.</param>
+        protected abstract void HandleOnConsumerError(object sender, Message message);
+
+        /// <summary>
+        /// Must be implemented by the client in order to consumer messages and add custom treatment.
+        /// </summary>
+        /// <param name="sender">Message sender.</param>
+        /// <param name="message">Message envelope with the content to consume.</param>
+        protected abstract void HandleMessage(object sender, Message<string, TBaseMessage> message);
     }
 }
