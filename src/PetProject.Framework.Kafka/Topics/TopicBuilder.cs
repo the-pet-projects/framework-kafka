@@ -56,7 +56,7 @@
 
             if (!string.IsNullOrWhiteSpace(this.ApplicationName))
             {
-                topicName = $"{this.ApplicationName}_{topicName}";
+                topicName = $"{this.ApplicationName}.{topicName}";
             }
 
             if (this.Version != null)

@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using PetProject.Framework.Kafka.Configurations;
+    using PetProject.Framework.Kafka.Configurations.Producer;
     using PetProject.Framework.Kafka.Producer;
     using PetProject.Framework.Kafka.Topics;
 
@@ -18,7 +18,7 @@
         {
             var producerConfiguration = new ProducerConfiguration("test-client", new List<string> { "localhost:9092" });
 
-            var producer = new Producer<TestTopic<SimpleMessage>>(producerConfiguration);
+            var producer = new KafkaProducer<TestTopic<SimpleMessage>, SimpleMessage>(producerConfiguration);
 
             for (var i = 0; i < 10; i++)
             {

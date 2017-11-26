@@ -1,4 +1,4 @@
-﻿namespace PetProject.Framework.Kafka.Configurations
+﻿namespace PetProject.Framework.Kafka.Configurations.Producer
 {
     public enum AcksType
     {

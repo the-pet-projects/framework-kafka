@@ -1,8 +1,8 @@
-﻿namespace PetProject.Framework.Kafka.Configurations
+﻿namespace PetProject.Framework.Kafka.Configurations.Producer
 {
     using System.Collections.Generic;
 
-    //TODO: Move comments to variables in ProducerConfiguration
+    //// TODO: Move comments to variables in ProducerConfiguration
     public interface IProducerConfiguration
     {
         /// <summary>

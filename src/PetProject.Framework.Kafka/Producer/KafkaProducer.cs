@@ -3,34 +3,35 @@ namespace PetProject.Framework.Kafka.Producer
     using System;
     using System.Text;
     using System.Threading.Tasks;
-    using Configurations;
+    using Configurations.Producer;
     using Confluent.Kafka;
     using Confluent.Kafka.Serialization;
     using Exceptions;
-    using Newtonsoft.Json;
+    using Serializer;
     using Topics;
 
-    public class Producer<TTopic> : IProducer<TTopic>
+    public class KafkaProducer<TTopic, TMessage> : IKafkaProducer<TTopic, TMessage>
+        where TMessage : IMessageContract
+        where TTopic : ITopicContract
     {
-        private readonly Producer<string, string> producer;
+        private readonly Producer<string, TMessage> confluentProducer;
 
         private readonly ITopicContract topic;
 
         private bool disposed;
 
-        public Producer(ProducerConfiguration configuration)
+        public KafkaProducer(ProducerConfiguration configuration)
         {
-            this.producer = new Producer<string, string>(configuration.GetConfigurations(), new StringSerializer(Encoding.UTF8), new StringSerializer(Encoding.UTF8));
+            this.confluentProducer = new Producer<string, TMessage>(configuration.GetConfigurations(), new StringSerializer(Encoding.UTF8), new JsonSerializer<TMessage>());
 
-            this.topic = Activator.CreateInstance<TTopic>() as ITopicContract;
+            this.topic = Activator.CreateInstance<TTopic>();
         }
 
-        public async Task Produce<TMessage>(TMessage message)
-            where TMessage : IMessageContract
+        public async Task Produce(TMessage message)
         {
             var topicName = this.topic.TopicFullName;
             var partitionKey = message.GetPartitionKey();
-            var report = await this.producer.ProduceAsync(topicName, partitionKey, JsonConvert.SerializeObject(message));
+            var report = await this.confluentProducer.ProduceAsync(topicName, partitionKey, message);
 
             if (report.Error.HasError)
             {
@@ -38,13 +39,12 @@ namespace PetProject.Framework.Kafka.Producer
             }
         }
 
-        public async Task<Message<string, string>> ProduceAsync<TMessage>(TMessage message)
-            where TMessage : IMessageContract
+        public async Task<Message<string, TMessage>> ProduceAsync(TMessage message)
         {
             var topicName = this.topic.TopicFullName;
             var partitionKey = message.GetPartitionKey();
 
-            var deliveryReport = await this.producer.ProduceAsync(topicName, partitionKey, JsonConvert.SerializeObject(message));
+            var deliveryReport = await this.confluentProducer.ProduceAsync(topicName, partitionKey, message);
 
             return deliveryReport;
         }
