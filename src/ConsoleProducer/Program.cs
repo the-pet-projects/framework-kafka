@@ -19,7 +19,7 @@
         {
             var producerConfiguration = new ProducerConfiguration("test-client", new List<string> { "marx-petprojects.westeurope.cloudapp.azure.com:9092" });
 
-            var producer = new KafkaProducer<ItemCommandsV1>(new ItemCommandsTopic(), producerConfiguration);
+            var producer = new Producer<ItemCommandsV1>(new ItemCommandsTopic(), producerConfiguration);
 
             for (var i = 0; i < 1; i++)
             {

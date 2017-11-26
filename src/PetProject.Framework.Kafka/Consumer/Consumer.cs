@@ -15,14 +15,11 @@ namespace PetProject.Framework.Kafka.Consumer
     {
         private readonly IConsumerConfiguration configuration;
         private readonly CancellationTokenSource tokenSource;
-
         private readonly Dictionary<Type, Delegate> messageHandlers;
-
-        private Consumer<string, string> confluentConsumer;
-
+        private readonly JsonSerializerSettings settings;
         private readonly ITopic<TBaseMessage> topic;
 
-        private readonly JsonSerializerSettings settings;
+        private Consumer<string, string> confluentConsumer;
 
         protected Consumer(ITopic<TBaseMessage> topic, IConsumerConfiguration configuration)
         {

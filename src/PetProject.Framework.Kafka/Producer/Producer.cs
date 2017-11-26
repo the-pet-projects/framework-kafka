@@ -10,7 +10,7 @@ namespace PetProject.Framework.Kafka.Producer
     using Serializer;
     using Topics;
 
-    public class KafkaProducer<TBaseMessage> : IKafkaProducer<TBaseMessage>
+    public class Producer<TBaseMessage> : IProducer<TBaseMessage>
         where TBaseMessage : IMessage
     {
         private readonly Producer<string, MessageWrapper<TBaseMessage>> confluentProducer;
@@ -19,7 +19,7 @@ namespace PetProject.Framework.Kafka.Producer
 
         private bool disposed;
 
-        public KafkaProducer(ITopic<TBaseMessage> topic, ProducerConfiguration configuration)
+        public Producer(ITopic<TBaseMessage> topic, ProducerConfiguration configuration)
         {
             this.confluentProducer = new Producer<string, MessageWrapper<TBaseMessage>>(configuration.GetConfigurations(), new StringSerializer(Encoding.UTF8), new JsonSerializer<MessageWrapper<TBaseMessage>>());
 
@@ -32,11 +32,7 @@ namespace PetProject.Framework.Kafka.Producer
             var topicName = this.topic.TopicFullName;
             var partitionKey = message.GetPartitionKey();
 
-            var wrappedMessage = new MessageWrapper<TBaseMessage>
-            {
-                MessageType = typeof(TMessage).FullName,
-                Message = message
-            };
+            var wrappedMessage = MessageWrapperFactory<TBaseMessage>.CreateTyped(message);
 
             var report = await this.confluentProducer.ProduceAsync(topicName, partitionKey, wrappedMessage);
 
@@ -52,11 +48,7 @@ namespace PetProject.Framework.Kafka.Producer
             var topicName = this.topic.TopicFullName;
             var partitionKey = message.GetPartitionKey();
 
-            var wrappedMessage = new MessageWrapper<TBaseMessage>
-            {
-                MessageType = typeof(TMessage).AssemblyQualifiedName,
-                Message = message
-            };
+            var wrappedMessage = MessageWrapperFactory<TBaseMessage>.CreateTyped(message);
 
             var deliveryReport = await this.confluentProducer.ProduceAsync(topicName, partitionKey, wrappedMessage);
 

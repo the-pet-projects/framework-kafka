@@ -21,7 +21,7 @@
 
         public byte[] Serialize(T data)
         {
-            return this.stringSerializer.Serialize(JsonConvert.SerializeObject((object)data, settings));
+            return this.stringSerializer.Serialize(JsonConvert.SerializeObject((object)data, this.settings));
         }
     }
 }

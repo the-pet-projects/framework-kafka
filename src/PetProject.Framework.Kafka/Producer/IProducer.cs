@@ -5,7 +5,7 @@
     using Confluent.Kafka;
     using Topics;
 
-    internal interface IKafkaProducer<TBaseMessage> : IDisposable 
+    internal interface IProducer<TBaseMessage> : IDisposable 
         where TBaseMessage : IMessage
     {
         Task Produce<TMessage>(TMessage message) where TMessage : IMessage;
