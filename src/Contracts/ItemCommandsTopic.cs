@@ -1,6 +1,6 @@
 ﻿namespace Contracts
 {
-    using PetProject.Framework.Kafka.Topics;
+    using PetProject.Framework.Kafka.Contracts.Topics;
 
     public class ItemCommandsTopic : ITopic<ItemCommandsV1>
     {

@@ -3,9 +3,10 @@
     using System;
     using System.Threading.Tasks;
     using Confluent.Kafka;
-    using Topics;
+    using Contracts.Topics;
+    using Wrapper;
 
-    internal interface IProducer<TBaseMessage> : IDisposable 
+    internal interface IProducer<TBaseMessage> : IDisposable
         where TBaseMessage : IMessage
     {
         Task Produce<TMessage>(TMessage message) where TMessage : IMessage;

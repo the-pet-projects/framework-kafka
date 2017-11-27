@@ -7,8 +7,9 @@ namespace PetProject.Framework.Kafka.Consumer
     using Configurations.Consumer;
     using Confluent.Kafka;
     using Confluent.Kafka.Serialization;
+    using Contracts.Topics;
     using Newtonsoft.Json;
-    using Topics;
+    using Wrapper;
 
     public abstract class Consumer<TBaseMessage> : IConsumer<TBaseMessage>
         where TBaseMessage : IMessage

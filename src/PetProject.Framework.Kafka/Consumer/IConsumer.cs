@@ -1,7 +1,7 @@
 namespace PetProject.Framework.Kafka.Consumer
 {
     using System;
-    using Topics;
+    using Contracts.Topics;
 
     public interface IConsumer<TBaseMessage> : IDisposable
         where TBaseMessage : IMessage

@@ -1,7 +1,7 @@
 namespace Contracts
 {
     using Confluent.Kafka;
-    using PetProject.Framework.Kafka.Topics;
+    using PetProject.Framework.Kafka.Contracts.Topics;
 
     public class ItemCommandsV1 : IMessage
     {

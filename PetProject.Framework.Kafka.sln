@@ -11,9 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PetProjects.Framework.Kafka
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleConsumer", "src\ConsoleSample\ConsoleConsumer.csproj", "{928A43F0-C5D3-4B9C-90AC-DA506CA456B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleProducer", "src\ConsoleProducer\ConsoleProducer.csproj", "{EC5496BB-6B08-48CC-8CC7-34DDA3C2284C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleProducer", "src\ConsoleProducer\ConsoleProducer.csproj", "{EC5496BB-6B08-48CC-8CC7-34DDA3C2284C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "src\Contracts\Contracts.csproj", "{8FCDF6D3-B6B1-4C13-9A22-A868A5F27B6B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Contracts", "src\Contracts\Contracts.csproj", "{8FCDF6D3-B6B1-4C13-9A22-A868A5F27B6B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetProject.Framework.Kafka.Contracts", "src\ClassLibrary\PetProject.Framework.Kafka.Contracts.csproj", "{C465A062-1AE7-41EB-BF2C-A4760542089D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +43,10 @@ Global
 		{8FCDF6D3-B6B1-4C13-9A22-A868A5F27B6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8FCDF6D3-B6B1-4C13-9A22-A868A5F27B6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8FCDF6D3-B6B1-4C13-9A22-A868A5F27B6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C465A062-1AE7-41EB-BF2C-A4760542089D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C465A062-1AE7-41EB-BF2C-A4760542089D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C465A062-1AE7-41EB-BF2C-A4760542089D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C465A062-1AE7-41EB-BF2C-A4760542089D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,9 +6,10 @@ namespace PetProject.Framework.Kafka.Producer
     using Configurations.Producer;
     using Confluent.Kafka;
     using Confluent.Kafka.Serialization;
+    using Contracts.Topics;
     using Exceptions;
     using Serializer;
-    using Topics;
+    using Wrapper;
 
     public class Producer<TBaseMessage> : IProducer<TBaseMessage>
         where TBaseMessage : IMessage
