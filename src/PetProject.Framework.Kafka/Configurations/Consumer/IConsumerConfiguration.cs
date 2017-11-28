@@ -1,4 +1,4 @@
-namespace PetProject.Framework.Kafka.Configurations.Consumer
+namespace PetProjects.Framework.Kafka.Configurations.Consumer
 {
     using System.Collections.Generic;
 
