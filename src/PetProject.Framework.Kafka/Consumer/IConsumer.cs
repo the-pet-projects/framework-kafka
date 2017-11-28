@@ -17,6 +17,9 @@ namespace PetProject.Framework.Kafka.Consumer
         /// </summary>
         void CommitAsync();
 
+        /// <summary>
+        /// Handler for each message to be consumed inside the topic.
+        /// </summary>
         void ConsumerHandlerFor<TMessage>(Action<TMessage> handler);
     }
 }
