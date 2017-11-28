@@ -4,8 +4,8 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Contracts;
-    using PetProject.Framework.Kafka.Configurations.Producer;
-    using PetProject.Framework.Kafka.Producer;
+    using PetProjects.Framework.Kafka.Configurations.Producer;
+    using PetProjects.Framework.Kafka.Producer;
 
     internal class Program
     {

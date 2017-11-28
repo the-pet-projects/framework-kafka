@@ -1,6 +1,6 @@
 ﻿namespace Contracts
 {
-    using PetProject.Framework.Kafka.Contracts.Topics;
+    using PetProjects.Framework.Kafka.Contracts.Topics;
 
     public class ItemCommandsTopic : ITopic<ItemCommandsV1>
     {
@@ -13,7 +13,7 @@
         public TopicBuilder SetTopicName()
         {
             return new TopicBuilder($"{typeof(ItemCommandsV1).FullName}", MessageType.Events)
-                .WithApplication("console-app")
+                .WithApplication("console-app-test")
                 .WithVersion(1);
         }
     }

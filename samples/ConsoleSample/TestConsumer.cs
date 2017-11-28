@@ -2,8 +2,8 @@
 {
     using Confluent.Kafka;
     using Contracts;
-    using PetProject.Framework.Kafka.Configurations.Consumer;
-    using PetProject.Framework.Kafka.Consumer;
+    using PetProjects.Framework.Kafka.Configurations.Consumer;
+    using PetProjects.Framework.Kafka.Consumer;
 
     public class TestConsumer : Consumer<ItemCommandsV1>
     {

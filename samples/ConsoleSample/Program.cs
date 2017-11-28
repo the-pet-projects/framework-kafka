@@ -5,8 +5,8 @@
     using Contracts;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
-    using PetProject.Framework.Kafka.Configurations.Consumer;
-    using PetProject.Framework.Kafka.Consumer;
+    using PetProjects.Framework.Kafka.Configurations.Consumer;
+    using PetProjects.Framework.Kafka.Consumer;
 
     internal partial class Program
     {
