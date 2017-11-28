@@ -7,9 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PetProject.Framework.Kafka"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B8781380-7F4D-4927-81B7-49A311325677}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PetProjects.Framework.Kafka.Tests", "test\PetProjects.Framework.Kafka.Tests\PetProjects.Framework.Kafka.Tests.csproj", "{D92CB0B5-D903-4ED5-9139-3FBD91997249}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PetProject.Framework.Kafka.Contracts", "src\PetProject.Framework.Kafka.Contracts\PetProject.Framework.Kafka.Contracts.csproj", "{D87B95BC-A21A-414A-AA68-019A399C7471}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PetProjects.Framework.Kafka.Tests", "test\unit\PetProjects.Framework.Kafka.Tests\PetProjects.Framework.Kafka.Tests.csproj", "{CCD84B83-181F-457C-A780-1566FAA536B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,20 +21,20 @@ Global
 		{CCE8A4BC-4A0A-4E72-AB03-2FB1B2308649}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CCE8A4BC-4A0A-4E72-AB03-2FB1B2308649}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CCE8A4BC-4A0A-4E72-AB03-2FB1B2308649}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D92CB0B5-D903-4ED5-9139-3FBD91997249}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D92CB0B5-D903-4ED5-9139-3FBD91997249}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D92CB0B5-D903-4ED5-9139-3FBD91997249}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D92CB0B5-D903-4ED5-9139-3FBD91997249}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D87B95BC-A21A-414A-AA68-019A399C7471}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D87B95BC-A21A-414A-AA68-019A399C7471}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D87B95BC-A21A-414A-AA68-019A399C7471}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D87B95BC-A21A-414A-AA68-019A399C7471}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCD84B83-181F-457C-A780-1566FAA536B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCD84B83-181F-457C-A780-1566FAA536B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCD84B83-181F-457C-A780-1566FAA536B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCD84B83-181F-457C-A780-1566FAA536B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{D92CB0B5-D903-4ED5-9139-3FBD91997249} = {B8781380-7F4D-4927-81B7-49A311325677}
+		{CCD84B83-181F-457C-A780-1566FAA536B8} = {B8781380-7F4D-4927-81B7-49A311325677}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {72B1F275-CEDE-4FD6-A206-419E7046FBDD}
