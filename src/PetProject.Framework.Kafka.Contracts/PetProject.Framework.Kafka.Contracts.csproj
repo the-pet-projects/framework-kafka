@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
-    <AssemblyName>PetProject.Framework.Kafka.Contracts</AssemblyName>
-    <RootNamespace>PetProject.Framework.Kafka.Contracts</RootNamespace>
-  </PropertyGroup>
-
-</Project>

@@ -1,4 +1,4 @@
-﻿namespace PetProject.Framework.Kafka.Wrapper
+﻿namespace PetProjects.Framework.Kafka.Wrapper
 {
     public static class MessageWrapperFactory<TBaseMessage>
     {
