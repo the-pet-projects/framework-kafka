@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2009
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetProject.Framework.Kafka.Samples", "PetProject.Framework.Kafka.Samples\PetProject.Framework.Kafka.Samples.csproj", "{11CD6D28-784E-4BAD-969D-5D09F4D72389}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{11CD6D28-784E-4BAD-969D-5D09F4D72389}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11CD6D28-784E-4BAD-969D-5D09F4D72389}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11CD6D28-784E-4BAD-969D-5D09F4D72389}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11CD6D28-784E-4BAD-969D-5D09F4D72389}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {03659523-7366-409C-9A3E-7512F5CA5D08}
+	EndGlobalSection
+EndGlobal
