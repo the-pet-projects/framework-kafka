@@ -1,4 +1,4 @@
-﻿namespace PetProject.Framework.Kafka.Serializer
+﻿namespace PetProjects.Framework.Kafka.Serializer
 {
     using System.Text;
     using Confluent.Kafka.Serialization;

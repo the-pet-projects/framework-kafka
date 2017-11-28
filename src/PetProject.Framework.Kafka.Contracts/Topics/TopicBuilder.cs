@@ -1,4 +1,4 @@
-﻿namespace PetProject.Framework.Kafka.Contracts.Topics
+﻿namespace PetProjects.Framework.Kafka.Contracts.Topics
 {
     using System;
     using Exceptions;

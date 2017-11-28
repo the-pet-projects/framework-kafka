@@ -1,4 +1,4 @@
-namespace PetProject.Framework.Kafka.Exceptions
+namespace PetProjects.Framework.Kafka.Exceptions
 {
     using System;
     using Confluent.Kafka;

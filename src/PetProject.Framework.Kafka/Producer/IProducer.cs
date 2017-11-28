@@ -1,4 +1,4 @@
-﻿namespace PetProject.Framework.Kafka.Producer
+﻿namespace PetProjects.Framework.Kafka.Producer
 {
     using System;
     using System.Threading.Tasks;

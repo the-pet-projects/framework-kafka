@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>PetProjects.Framework.Kafka</AssemblyName>
+    <RootNamespace>PetProjects.Framework.Kafka</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -9,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PetProject.Framework.Kafka.Contracts\PetProject.Framework.Kafka.Contracts.csproj" />
+    <ProjectReference Include="..\PetProject.Framework.Kafka.Contracts\PetProjects.Framework.Kafka.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
