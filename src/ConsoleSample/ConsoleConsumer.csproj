@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Contracts\Contracts.csproj" />
     <ProjectReference Include="..\PetProject.Framework.Kafka\PetProject.Framework.Kafka.csproj" />
   </ItemGroup>
 

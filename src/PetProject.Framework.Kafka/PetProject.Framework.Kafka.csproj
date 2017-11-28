@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ClassLibrary\PetProject.Framework.Kafka.Contracts.csproj" />
+    <ProjectReference Include="..\PetProject.Framework.Kafka.Contracts\PetProject.Framework.Kafka.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
