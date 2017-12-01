@@ -17,7 +17,7 @@
 
         private static async Task MainAsync(string[] args)
         {
-            var producerConfiguration = new ProducerConfiguration("test-client", new List<string> { "marx-petprojects.westeurope.cloudapp.azure.com:9092" });
+            var producerConfiguration = new ProducerConfiguration("test-client", new List<string> { "localhost:9092" });
 
             var producer = new Producer<ItemCommandsV1>(new ItemCommandsTopic(), producerConfiguration);
 
