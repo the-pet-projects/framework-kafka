@@ -6,7 +6,7 @@
     using Contracts.Topics;
     using Wrapper;
 
-    internal interface IProducer<TBaseMessage> : IDisposable
+    public interface IProducer<TBaseMessage> : IDisposable
         where TBaseMessage : IMessage
     {
         Task Produce<TMessage>(TMessage message) where TMessage : IMessage;
