@@ -10,7 +10,7 @@ namespace PetProjects.Framework.Kafka.Consumer
     using Confluent.Kafka.Serialization;
     using Contracts.Topics;
     using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
+    using Serializer;
     using Wrapper;
 
     public abstract class Consumer<TBaseMessage> : IConsumer<TBaseMessage>
@@ -20,28 +20,17 @@ namespace PetProjects.Framework.Kafka.Consumer
         private readonly IConsumerConfiguration configuration;
         private readonly CancellationTokenSource tokenSource;
         private readonly Dictionary<Type, Delegate> messageHandlers;
-        private readonly JsonSerializerSettings settings;
         private readonly ITopic<TBaseMessage> topic;
 
-        private Consumer<string, string> confluentConsumer;
+        private Consumer<string, MessageWrapper> confluentConsumer;
 
         protected Consumer(ITopic<TBaseMessage> topic, IConsumerConfiguration configuration, ILogger logger)
-            : this(topic, configuration)
         {
             this.logger = logger;
-        }
-
-        protected Consumer(ITopic<TBaseMessage> topic, IConsumerConfiguration configuration)
-        {
             this.messageHandlers = new Dictionary<Type, Delegate>();
             this.tokenSource = new CancellationTokenSource();
             this.configuration = configuration;
             this.topic = topic;
-
-            this.settings = new JsonSerializerSettings
-            {
-                TypeNameHandling = TypeNameHandling.Auto
-            };
         }
 
         /// <inheritdoc />
@@ -51,10 +40,10 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// </summary>
         public bool StartConsuming()
         {
-            this.confluentConsumer = new Consumer<string, string>(
+            this.confluentConsumer = new Consumer<string, MessageWrapper>(
                 this.configuration.GetConfigurations(),
                 new StringDeserializer(Encoding.UTF8),
-                new StringDeserializer(Encoding.UTF8));
+                new JsonDeserializer<MessageWrapper>());
 
             this.confluentConsumer.OnMessage += this.HandleMessage;
 
@@ -152,7 +141,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// </summary>
         /// <param name="sender">Message sender.</param>
         /// <param name="consumerMessage">Message envelope with key value pair content.</param>
-        protected void HandleMessage(object sender, Message<string, string> consumerMessage)
+        protected void HandleMessage(object sender, Message<string, MessageWrapper> consumerMessage)
         {
             if (consumerMessage.Value == null)
             {
@@ -160,17 +149,7 @@ namespace PetProjects.Framework.Kafka.Consumer
                 return;
             }
 
-            MessageWrapper wrappedMessage;
-            try
-            {
-                wrappedMessage = JsonConvert.DeserializeObject<MessageWrapper>(consumerMessage.Value, this.settings);
-            }
-            catch (Exception)
-            {
-                this.logger.LogError("Consumer error when deserializing.");
-                throw new Exception("Consumer error when deserializing.");
-            }
-
+            var wrappedMessage = consumerMessage.Value;
             var type = Type.GetType(wrappedMessage.MessageType);
 
             if (!this.messageHandlers.ContainsKey(type))
