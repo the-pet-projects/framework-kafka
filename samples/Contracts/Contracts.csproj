@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PetProjects.Framework.Kafka.Contracts" Version="0.1.17339.1-beta" />
+    <PackageReference Include="PetProjects.Framework.Kafka.Contracts" Version="0.1.17339.4-beta" />
   </ItemGroup>
 
 </Project>
