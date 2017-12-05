@@ -42,7 +42,6 @@
                 {
                     Console.WriteLine($"CommittedOffsets: {JsonConvert.SerializeObject(committedOffsets)}");
                 }
-
             });
 
             var initiated = consumer.StartConsuming();
