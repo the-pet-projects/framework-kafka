@@ -11,6 +11,6 @@
     {
         Task Produce<TMessage>(TMessage message) where TMessage : IMessage;
 
-        Task<Message<string, MessageWrapper<TBaseMessage>>> ProduceAsync<TMessage>(TMessage message) where TMessage : IMessage;
+        Task<Message<string, MessageWrapper>> ProduceAsync<TMessage>(TMessage message) where TMessage : IMessage;
     }
 }

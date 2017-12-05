@@ -14,7 +14,7 @@ namespace PetProjects.Framework.Kafka.Producer
     public class Producer<TBaseMessage> : IProducer<TBaseMessage>
         where TBaseMessage : IMessage
     {
-        private readonly Producer<string, MessageWrapper<TBaseMessage>> confluentProducer;
+        private readonly Producer<string, MessageWrapper> confluentProducer;
 
         private readonly ITopic<TBaseMessage> topic;
 
@@ -22,7 +22,7 @@ namespace PetProjects.Framework.Kafka.Producer
 
         public Producer(ITopic<TBaseMessage> topic, ProducerConfiguration configuration)
         {
-            this.confluentProducer = new Producer<string, MessageWrapper<TBaseMessage>>(configuration.GetConfigurations(), new StringSerializer(Encoding.UTF8), new JsonSerializer<MessageWrapper<TBaseMessage>>());
+            this.confluentProducer = new Producer<string, MessageWrapper>(configuration.GetConfigurations(), new StringSerializer(Encoding.UTF8), new JsonSerializer<MessageWrapper>());
 
             this.topic = topic;
         }
@@ -33,7 +33,7 @@ namespace PetProjects.Framework.Kafka.Producer
             var topicName = this.topic.TopicFullName;
             var partitionKey = message.GetPartitionKey();
 
-            var wrappedMessage = MessageWrapperFactory<TBaseMessage>.CreateTyped(message);
+            var wrappedMessage = MessageWrapperFactory.Create(message);
 
             var report = await this.confluentProducer.ProduceAsync(topicName, partitionKey, wrappedMessage);
 
@@ -43,13 +43,13 @@ namespace PetProjects.Framework.Kafka.Producer
             }
         }
 
-        public async Task<Message<string, MessageWrapper<TBaseMessage>>> ProduceAsync<TMessage>(TMessage message)
+        public async Task<Message<string, MessageWrapper>> ProduceAsync<TMessage>(TMessage message)
             where TMessage : IMessage
         {
             var topicName = this.topic.TopicFullName;
             var partitionKey = message.GetPartitionKey();
 
-            var wrappedMessage = MessageWrapperFactory<TBaseMessage>.CreateTyped(message);
+            var wrappedMessage = MessageWrapperFactory.Create(message);
 
             var deliveryReport = await this.confluentProducer.ProduceAsync(topicName, partitionKey, wrappedMessage);
 

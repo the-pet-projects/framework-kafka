@@ -1,6 +1,8 @@
 namespace PetProjects.Framework.Kafka.Consumer
 {
     using System;
+    using System.Threading.Tasks;
+    using Confluent.Kafka;
     using Contracts.Topics;
 
     public interface IConsumer<TBaseMessage> : IDisposable
@@ -15,7 +17,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// <summary>
         /// Decorator around Confluent Consumer to commit messages asynchronously after success.
         /// </summary>
-        void CommitAsync();
+        Task<CommittedOffsets> CommitAsync();
 
         /// <summary>
         /// Handler for each message to be consumed inside the topic.
