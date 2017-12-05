@@ -22,12 +22,12 @@
 
         public byte[] Serialize(string topic, T data)
         {
-            return this.stringSerializer.Serialize(null, JsonConvert.SerializeObject((object)data, this.settings));
+            return this.stringSerializer.Serialize(topic, JsonConvert.SerializeObject((object)data, this.settings));
         }
 
         public IEnumerable<KeyValuePair<string, object>> Configure(IEnumerable<KeyValuePair<string, object>> config, bool isKey)
         {
-            return new List<KeyValuePair<string, object>>();
+            return config;
         }
     }
 }

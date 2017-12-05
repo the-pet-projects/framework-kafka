@@ -21,13 +21,13 @@
 
         public T Deserialize(string topic, byte[] data)
         {
-            var str = this.stringDeserializer.Deserialize(null, data);
+            var str = this.stringDeserializer.Deserialize(topic, data);
             return JsonConvert.DeserializeObject<T>(str);
         }
 
         public IEnumerable<KeyValuePair<string, object>> Configure(IEnumerable<KeyValuePair<string, object>> config, bool isKey)
         {
-            return new List<KeyValuePair<string, object>>();
+            return config;
         }
     }
 }
