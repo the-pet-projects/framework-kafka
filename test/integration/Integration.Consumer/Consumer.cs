@@ -1,4 +1,4 @@
-﻿namespace ConsoleConsumer
+namespace Integration.Consumer
 {
     using System;
     using System.Collections.Generic;
@@ -8,23 +8,23 @@
     using Newtonsoft.Json;
     using PetProjects.Framework.Kafka.Configurations.Consumer;
     using PetProjects.Framework.Kafka.Consumer;
+    using Xunit;
 
-    internal partial class Program
+    public class Consumer
     {
-        public static void Main(string[] args)
+        [Fact]
+        public void Consume_Test()
         {
-            Console.WriteLine("Consumer");
-
             var servicesCollection = new ServiceCollection();
 
             servicesCollection.AddSingleton<IConsumerConfiguration>(
                 new ConsumerConfiguration(
-                    "group01",
-                    "consumer01",
-                    new List<string>
-                    {
-                        "marx-petprojects.westeurope.cloudapp.azure.com:9092"
-                    })
+                        "group01",
+                        "consumer01",
+                        new List<string>
+                        {
+                            "localhost:9092"
+                        })
                     .SetPollTimeout(10000));
 
             servicesCollection.AddSingleton<IConsumer<ItemCommandsV1>, TestConsumer>();
@@ -40,13 +40,13 @@
 
                 if (committedOffsets.Offsets.Any())
                 {
-                    Console.WriteLine($"CommittedOffsets: {JsonConvert.SerializeObject(committedOffsets)}");
+                    //Console.WriteLine($"CommittedOffsets: {JsonConvert.SerializeObject(committedOffsets)}");
                 }
             });
 
             var initiated = consumer.StartConsuming();
 
-            Console.WriteLine(initiated ? "Started!!" : "Not Started!!");
+            //Console.WriteLine(initiated ? "Started!!" : "Not Started!!");
 
             var cancelled = false;
             Console.CancelKeyPress += (_, e) =>
@@ -55,7 +55,7 @@
                 cancelled = true;
             };
 
-            Console.WriteLine("Ctrl-C to exit.");
+            //Console.WriteLine("Ctrl-C to exit.");
             while (!cancelled)
             {
                 consumer.Dispose();

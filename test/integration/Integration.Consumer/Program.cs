@@ -1,4 +1,4 @@
-﻿namespace ConsoleConsumer
+﻿namespace Integration.Consumer
 {
     using System;
     using System.Collections.Generic;
@@ -9,7 +9,7 @@
     using PetProjects.Framework.Kafka.Configurations.Consumer;
     using PetProjects.Framework.Kafka.Consumer;
 
-    internal partial class Program
+    internal class Program
     {
         public static void Main(string[] args)
         {

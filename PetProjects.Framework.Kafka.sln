@@ -9,17 +9,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{B8781380-7
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PetProjects.Framework.Kafka.Contracts", "src\PetProject.Framework.Kafka.Contracts\PetProjects.Framework.Kafka.Contracts.csproj", "{D87B95BC-A21A-414A-AA68-019A399C7471}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration", "integration", "{4501D821-F069-4468-A1EA-67872CCCB344}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleProducer", "test\integration\ConsoleProducer\ConsoleProducer.csproj", "{CCA9DDC4-4DF3-42B0-B724-5B1B09A21CF9}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleConsumer", "test\integration\ConsoleSample\ConsoleConsumer.csproj", "{65117135-842B-4C73-82E1-846A49B48416}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Contracts", "test\integration\Contracts\Contracts.csproj", "{DC2B53E5-A621-49FA-A33D-D80C137728D8}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unit", "unit", "{4B907FF1-FA57-49A2-9B90-9FDFD87679E8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PetProjects.Framework.Kafka.Tests", "test\unit\PetProjects.Framework.Kafka.Tests\PetProjects.Framework.Kafka.Tests.csproj", "{D52D3DF0-7BA1-40FA-8C04-F731B5E5B6DE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration", "integration", "{F5671725-3953-4DD3-B7B9-8F73FE64361A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,18 +29,6 @@ Global
 		{D87B95BC-A21A-414A-AA68-019A399C7471}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D87B95BC-A21A-414A-AA68-019A399C7471}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D87B95BC-A21A-414A-AA68-019A399C7471}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CCA9DDC4-4DF3-42B0-B724-5B1B09A21CF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CCA9DDC4-4DF3-42B0-B724-5B1B09A21CF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CCA9DDC4-4DF3-42B0-B724-5B1B09A21CF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CCA9DDC4-4DF3-42B0-B724-5B1B09A21CF9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{65117135-842B-4C73-82E1-846A49B48416}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{65117135-842B-4C73-82E1-846A49B48416}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{65117135-842B-4C73-82E1-846A49B48416}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{65117135-842B-4C73-82E1-846A49B48416}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DC2B53E5-A621-49FA-A33D-D80C137728D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DC2B53E5-A621-49FA-A33D-D80C137728D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DC2B53E5-A621-49FA-A33D-D80C137728D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DC2B53E5-A621-49FA-A33D-D80C137728D8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D52D3DF0-7BA1-40FA-8C04-F731B5E5B6DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D52D3DF0-7BA1-40FA-8C04-F731B5E5B6DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D52D3DF0-7BA1-40FA-8C04-F731B5E5B6DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -56,12 +38,9 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{4501D821-F069-4468-A1EA-67872CCCB344} = {B8781380-7F4D-4927-81B7-49A311325677}
-		{CCA9DDC4-4DF3-42B0-B724-5B1B09A21CF9} = {4501D821-F069-4468-A1EA-67872CCCB344}
-		{65117135-842B-4C73-82E1-846A49B48416} = {4501D821-F069-4468-A1EA-67872CCCB344}
-		{DC2B53E5-A621-49FA-A33D-D80C137728D8} = {4501D821-F069-4468-A1EA-67872CCCB344}
 		{4B907FF1-FA57-49A2-9B90-9FDFD87679E8} = {B8781380-7F4D-4927-81B7-49A311325677}
 		{D52D3DF0-7BA1-40FA-8C04-F731B5E5B6DE} = {4B907FF1-FA57-49A2-9B90-9FDFD87679E8}
+		{F5671725-3953-4DD3-B7B9-8F73FE64361A} = {B8781380-7F4D-4927-81B7-49A311325677}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {72B1F275-CEDE-4FD6-A206-419E7046FBDD}

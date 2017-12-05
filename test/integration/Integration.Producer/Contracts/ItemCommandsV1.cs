@@ -1,4 +1,4 @@
-namespace Contracts
+namespace Integration.TestContracts
 {
     using System;
     using PetProjects.Framework.Kafka.Contracts.Topics;

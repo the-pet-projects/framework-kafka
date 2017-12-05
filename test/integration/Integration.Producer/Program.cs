@@ -1,13 +1,13 @@
-﻿namespace ConsoleProducer
+﻿namespace Integration.ConsoleProducer
 {
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Contracts;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using PetProjects.Framework.Kafka.Configurations.Producer;
     using PetProjects.Framework.Kafka.Producer;
+    using TestContracts;
 
     internal class Program
     {
@@ -21,7 +21,7 @@
         {
             var servicesCollection = new ServiceCollection();
 
-            var producerConfiguration = new ProducerConfiguration("test-client", new List<string> { "marx-petprojects.westeurope.cloudapp.azure.com:9092" });
+            var producerConfiguration = new ProducerConfiguration("test-client", new List<string> { "localhost:9092" });
             servicesCollection.AddSingleton<IProducer<ItemCommandsV1>>(new Producer<ItemCommandsV1>(new ItemCommandsTopic(), producerConfiguration));
 
             var serviceProvider = servicesCollection.BuildServiceProvider();

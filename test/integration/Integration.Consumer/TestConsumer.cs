@@ -1,4 +1,4 @@
-﻿namespace ConsoleConsumer
+﻿namespace Integration.Consumer
 {
     using System;
     using Confluent.Kafka;

@@ -1,7 +1,7 @@
-﻿using PetProjects.Framework.Kafka.Contracts.Topics;
-
-namespace Contracts
+﻿namespace Integration.Consumer.Contracts
 {
+    using PetProjects.Framework.Kafka.Contracts.Topics;
+
     public class ItemCommandsTopic : ITopic<ItemCommandsV1>
     {
         public ItemCommandsTopic()

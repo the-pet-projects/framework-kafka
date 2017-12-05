@@ -21,7 +21,7 @@
         {
             var servicesCollection = new ServiceCollection();
 
-            var producerConfiguration = new ProducerConfiguration("test-client", new List<string> { "marx-petprojects.westeurope.cloudapp.azure.com:9092" });
+            var producerConfiguration = new ProducerConfiguration("test-client", new List<string> { "localhost:9092" });
             servicesCollection.AddSingleton<IProducer<ItemCommandsV1>>(new Producer<ItemCommandsV1>(new ItemCommandsTopic(), producerConfiguration));
 
             var serviceProvider = servicesCollection.BuildServiceProvider();

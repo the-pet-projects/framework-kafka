@@ -10,7 +10,6 @@
         private readonly IDeserializer<string> stringDeserializer;
         private readonly JsonSerializerSettings settings;
 
-
         public JsonDeserializer()
         {
             this.stringDeserializer = new StringDeserializer(Encoding.UTF8);

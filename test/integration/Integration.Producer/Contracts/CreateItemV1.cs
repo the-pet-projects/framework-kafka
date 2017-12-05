@@ -1,4 +1,4 @@
-namespace Contracts
+namespace Integration.TestContracts
 {
     public class CreateItemV1 : ItemCommandsV1
     {
