@@ -22,6 +22,6 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// <summary>
         /// Handler for each message to be consumed inside the topic.
         /// </summary>
-        void ConsumerHandlerFor<TMessage>(Action<TMessage> handler);
+        void Receive<TMessage>(Action<TMessage> handler);
     }
 }

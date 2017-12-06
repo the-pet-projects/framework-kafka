@@ -65,7 +65,7 @@ namespace PetProjects.Framework.Kafka.Consumer
             return true;
         }
 
-        public void ConsumerHandlerFor<TMessage>(Action<TMessage> handler)
+        public void Receive<TMessage>(Action<TMessage> handler)
         {
             this.messageHandlers[typeof(TMessage)] = handler;
         }
@@ -150,12 +150,18 @@ namespace PetProjects.Framework.Kafka.Consumer
             }
 
             var wrappedMessage = consumerMessage.Value;
+
+            this.CallHandler(wrappedMessage);
+        }
+
+        protected void CallHandler(MessageWrapper wrappedMessage)
+        {
             var type = Type.GetType(wrappedMessage.MessageType);
 
             if (!this.messageHandlers.ContainsKey(type))
             {
-                this.logger.LogError("An handler for this type of message does not exist. Please define one with ConsumerHandlerFor<> method!");
-                throw new Exception("An handler for this type of message does not exist. Please define one with ConsumerHandlerFor<> method!");
+                this.logger.LogError("An handler for this type of message does not exist. Please define one with Receive<> method!");
+                throw new Exception("An handler for this type of message does not exist. Please define one with Receive<> method!");
             }
 
             this.messageHandlers[type].DynamicInvoke(wrappedMessage.Message);
