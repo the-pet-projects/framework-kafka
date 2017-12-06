@@ -9,10 +9,20 @@ namespace PetProjects.Framework.Kafka.Consumer
         where TBaseMessage : IMessage
     {
         /// <summary>
+        /// Flag which signals if the consumer is running.
+        /// </summary>
+        bool IsRunning { get; }
+
+        /// <summary>
         /// Method to initiate the consumer.
         /// Messages must be committed manually.
         /// </summary>
-        bool StartConsuming();
+        void StartConsuming();
+
+        /// <summary>
+        /// Method to signal the consumer to stop.
+        /// </summary>
+        void StopConsuming();
 
         /// <summary>
         /// Decorator around Confluent Consumer to commit messages asynchronously after success.

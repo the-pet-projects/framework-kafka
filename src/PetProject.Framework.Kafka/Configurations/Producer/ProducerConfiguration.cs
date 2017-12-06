@@ -27,6 +27,20 @@
             };
         }
 
+        public ProducerConfiguration(string clientId, string bootstrapServers)
+        {
+            if (string.IsNullOrWhiteSpace(bootstrapServers))
+            {
+                throw new ArgumentException("There is no bootstrap server configured. Please add at least one.");
+            }
+
+            this.Configurations = new Dictionary<string, object>
+            {
+                { "bootstrap.servers", bootstrapServers },
+                { "client.id", clientId }
+            };
+        }
+
         protected Dictionary<string, object> Configurations { get; }
 
         public Dictionary<string, object> GetConfigurations()

@@ -6,6 +6,7 @@ namespace PetProjects.Framework.Kafka.Consumer
     using System.Threading;
     using System.Threading.Tasks;
     using Configurations.Consumer;
+    using Configurations.Producer;
     using Confluent.Kafka;
     using Confluent.Kafka.Serialization;
     using Contracts.Topics;
@@ -35,15 +36,23 @@ namespace PetProjects.Framework.Kafka.Consumer
 
         /// <inheritdoc />
         /// <summary>
+        /// Flag which signals if the consumer is running.
+        /// </summary>
+        public bool IsRunning { get; private set; }
+
+        /// <inheritdoc />
+        /// <summary>
         /// Method to initiate the consumer.
         /// Messages must be committed manually.
         /// </summary>
-        public bool StartConsuming()
+        public void StartConsuming()
         {
             this.confluentConsumer = new Consumer<string, MessageWrapper>(
                 this.configuration.GetConfigurations(),
                 new StringDeserializer(Encoding.UTF8),
                 new JsonDeserializer<MessageWrapper>());
+
+            this.IsRunning = true;
 
             this.confluentConsumer.OnMessage += this.HandleMessage;
 
@@ -57,12 +66,19 @@ namespace PetProjects.Framework.Kafka.Consumer
 
             this.confluentConsumer.Subscribe(this.topic.TopicFullName);
 
-            while (this.tokenSource != null && !this.tokenSource.IsCancellationRequested)
+            while (this.tokenSource != null && !this.tokenSource.IsCancellationRequested && this.IsRunning)
             {
                 this.confluentConsumer.Poll(this.configuration.PollTimeout ?? 100);
             }
+        }
 
-            return true;
+        /// <inheritdoc />
+        /// <summary>
+        /// Method to signal the consumer to stop.
+        /// </summary>
+        public void StopConsuming()
+        {
+            this.IsRunning = false;
         }
 
         public void Receive<TMessage>(Action<TMessage> handler)
@@ -72,16 +88,12 @@ namespace PetProjects.Framework.Kafka.Consumer
 
         public void Dispose()
         {
-            this.tokenSource.Cancel();
-            this.tokenSource?.Dispose();
-
-            if (this.confluentConsumer == null)
+            if (this.IsRunning)
             {
                 return;
             }
 
-            this.confluentConsumer.Dispose();
-            this.confluentConsumer = null;
+            this.StopConsumer();
         }
 
         /// <inheritdoc />
@@ -130,11 +142,45 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// <param name="message">Message envelope with the content to consume.</param>
         protected virtual void HandleOnConsumerError(object sender, Message message)
         {
-            this.logger.LogWarning("Framework Kafka ConsumerError: {message}", message);
+            this.logger.LogWarning("Framework Kafka ConsumerError: {messageContent}", message);
+
+            if (message.Error.IsLocalError)
+            {
+                if (message.Error.Code == ErrorCode.Local_ValueDeserialization)
+                {
+                    this.logger.LogWarning("Consumer Value Deserialization Error Code: {errorCode} | Reason: {errorMessage}", message.Error.Code, message.Error.Reason);
+                }
+
+                if (message.Error.Code == ErrorCode.BrokerNotAvailable)
+                {
+                    this.logger.LogCritical("Consumer Broker Error: {errorCode} | Reason: {errorMessage}", message.Error.Code, message.Error.Reason);
+                }
+
+                return;
+            }
+            
             this.RequeueMessageOnError(message);
         }
 
-        protected abstract void RequeueMessageOnError(Message message);
+        // It's ugly I know, I will beautify the shit out this later. for now it does the work.
+        protected virtual void RequeueMessageOnError(Message message)
+        {
+            var bootstrapServers = this.configuration.GetConfigurations()["bootstrap.servers"] as string;
+            using (var producer = new Producer<string, MessageWrapper>(new ProducerConfiguration($"retry-producer-{Guid.NewGuid()}", bootstrapServers).GetConfigurations(), new StringSerializer(Encoding.UTF8), new JsonSerializer<MessageWrapper>()))
+            {
+                var key = new StringDeserializer(Encoding.UTF8).Deserialize(message.Topic, message.Key);
+                var messageContent = new JsonDeserializer<MessageWrapper>().Deserialize(message.Topic, message.Value);
+
+                var report = producer.ProduceAsync(message.Topic, key, messageContent).Result;
+
+                if (!report.Error.HasError)
+                {
+                    return;
+                }
+                
+                this.logger.LogCritical("Critical Error when retrying to send message. Topic: {topic} | Message: {message} | Timestamp: {timestamp} | Error: {error}", message.Topic, messageContent, report.Timestamp, report.Error);
+            }
+        }
 
         /// <summary>
         /// Must be implemented by the client in order to consumer messages and add custom treatment.
@@ -161,10 +207,24 @@ namespace PetProjects.Framework.Kafka.Consumer
             if (!this.messageHandlers.ContainsKey(type))
             {
                 this.logger.LogError("An handler for this type of message does not exist. Please define one with Receive<> method!");
-                throw new Exception("An handler for this type of message does not exist. Please define one with Receive<> method!");
+                return;
             }
 
             this.messageHandlers[type].DynamicInvoke(wrappedMessage.Message);
+        }
+
+        private void StopConsumer()
+        {
+            this.tokenSource.Cancel();
+            this.tokenSource?.Dispose();
+
+            if (this.confluentConsumer == null)
+            {
+                return;
+            }
+
+            this.confluentConsumer.Dispose();
+            this.confluentConsumer = null;
         }
     }
 }
