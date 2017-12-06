@@ -81,6 +81,10 @@ namespace PetProjects.Framework.Kafka.Consumer
             this.IsRunning = false;
         }
 
+        /// <inheritdoc />
+        /// <summary>
+        /// Handler for each message to be consumed inside the topic.
+        /// </summary>
         public void Receive<TMessage>(Action<TMessage> handler)
         {
             this.messageHandlers[typeof(TMessage)] = handler;
@@ -136,7 +140,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         }
 
         /// <summary>
-        /// Must be implemented by the client in order to add Errors while consuming.
+        /// May be overriden by the client in order to handle consumer internal errors when consuming a message.
         /// </summary>
         /// <param name="sender">Message sender.</param>
         /// <param name="message">Message envelope with the content to consume.</param>
@@ -183,7 +187,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         }
 
         /// <summary>
-        /// Must be implemented by the client in order to consumer messages and add custom treatment.
+        /// May be overriden by the client in order to consumer messages and add custom treatment.
         /// </summary>
         /// <param name="sender">Message sender.</param>
         /// <param name="consumerMessage">Message envelope with key value pair content.</param>
