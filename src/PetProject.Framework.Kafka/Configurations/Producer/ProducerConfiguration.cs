@@ -4,8 +4,12 @@
     using System.Collections.Generic;
     using System.Linq;
 
-    public class ProducerConfiguration
+    using PetProjects.Framework.Kafka.Exceptions;
+
+    public class ProducerConfiguration : IProducerConfiguration
     {
+        private const int MaxInFlightRequest = 5;
+
         private readonly Dictionary<AcksType, string> acksMap = new Dictionary<AcksType, string>
         {
             { AcksType.None, "0" },
@@ -41,7 +45,38 @@
             };
         }
 
+        public AcksType Acks { get; private set; }
+
+        public int Retries { get; private set; }
+
+        public int BatchSize { get; private set; }
+
+        public int MaxInFlightRequestPerConnection { get; private set; }
+
         protected Dictionary<string, object> Configurations { get; }
+
+        public ProducerConfiguration EnableIdempotence(int maxInFlightRequestPerConnection, int retries)
+        {
+            if (retries <= 0)
+            {
+                throw new ProducerConfigurationException($"Retries must be greater than 0.");
+            }
+
+            if (maxInFlightRequestPerConnection <= 0 || maxInFlightRequestPerConnection > MaxInFlightRequest)
+            {
+                throw new ProducerConfigurationException($"MaxInFlightRequestPerConnection must be less than or equal to {MaxInFlightRequest}.");
+            }
+
+            this.Acks = AcksType.All;
+            this.Retries = retries;
+            this.MaxInFlightRequestPerConnection = maxInFlightRequestPerConnection;
+
+            this.Configurations.Add("acks", "all");
+            this.Configurations.Add("retries", retries);
+            this.Configurations.Add("max.in.flight.requests.per.connection", maxInFlightRequestPerConnection);
+
+            return this;
+        }
 
         public Dictionary<string, object> GetConfigurations()
         {
@@ -51,15 +86,6 @@
         public ProducerConfiguration WithBatch(int batchSize)
         {
             this.Configurations.Add("batch.size", batchSize);
-
-            return this;
-        }
-
-        public ProducerConfiguration WithIdempotence(int retries, int maxInFlightRequestPerConnection = 1)
-        {
-            this.Configurations.Add("acks", "all");
-            this.Configurations.Add("retries", retries);
-            this.Configurations.Add("max.in.flight.requests.per.connection", maxInFlightRequestPerConnection);
 
             return this;
         }

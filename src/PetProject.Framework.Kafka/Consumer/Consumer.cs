@@ -5,19 +5,24 @@ namespace PetProjects.Framework.Kafka.Consumer
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Configurations.Consumer;
-    using Configurations.Producer;
+
     using Confluent.Kafka;
     using Confluent.Kafka.Serialization;
-    using Contracts.Topics;
+
     using Microsoft.Extensions.Logging;
-    using Serializer;
-    using Wrapper;
+
+    using PetProjects.Framework.Kafka.Configurations.Consumer;
+    using PetProjects.Framework.Kafka.Configurations.Producer;
+    using PetProjects.Framework.Kafka.Contracts.Topics;
+    using PetProjects.Framework.Kafka.Logging;
+    using PetProjects.Framework.Kafka.Serializer;
+    using PetProjects.Framework.Kafka.Wrapper;
 
     public abstract class Consumer<TBaseMessage> : IConsumer<TBaseMessage>
         where TBaseMessage : IMessage
     {
-        private readonly ILogger logger;
+        private readonly GenericKafkaLog logger;
+        private readonly bool allowRetries;
         private readonly IConsumerConfiguration configuration;
         private readonly CancellationTokenSource tokenSource;
         private readonly Dictionary<Type, Delegate> messageHandlers;
@@ -25,9 +30,10 @@ namespace PetProjects.Framework.Kafka.Consumer
 
         private Consumer<string, MessageWrapper> confluentConsumer;
 
-        protected Consumer(ITopic<TBaseMessage> topic, IConsumerConfiguration configuration, ILogger logger)
+        protected Consumer(ITopic<TBaseMessage> topic, IConsumerConfiguration configuration, ILogger logger, bool allowRetries = false)
         {
-            this.logger = logger;
+            this.logger = new GenericKafkaLog(logger);
+            this.allowRetries = allowRetries;
             this.messageHandlers = new Dictionary<Type, Delegate>();
             this.tokenSource = new CancellationTokenSource();
             this.configuration = configuration;
@@ -68,7 +74,7 @@ namespace PetProjects.Framework.Kafka.Consumer
 
             while (this.tokenSource != null && !this.tokenSource.IsCancellationRequested && this.IsRunning)
             {
-                this.confluentConsumer.Poll(this.configuration.PollTimeout ?? 100);
+                this.confluentConsumer.Poll(this.configuration.MaxPollIntervalInMs);
             }
         }
 
@@ -79,6 +85,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         public void StopConsuming()
         {
             this.IsRunning = false;
+            this.tokenSource.Cancel();
         }
 
         /// <inheritdoc />
@@ -116,7 +123,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// <param name="statistics">Statistics returned from Confluent Consumer.</param>
         protected virtual void HandleStatistics(object sender, string statistics)
         {
-            this.logger.LogInformation("Framework Kafka Statistics: {statistics}", statistics);
+            this.logger.KafkaLogInfo("Statistics: {statistics}", statistics);
         }
 
         /// <summary>
@@ -126,7 +133,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// <param name="logMessage">Log Message object returned from Confluent Consumer.</param>
         protected virtual void HandleLogs(object sender, LogMessage logMessage)
         {
-            this.logger.LogInformation("Framework Kafka LogMessage: {logMessage}", logMessage);
+            this.logger.KafkaLogInfo("LogMessage: {logMessage}", logMessage);
         }
 
         /// <summary>
@@ -136,7 +143,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// <param name="error">Error object returned from Confluent Consumer</param>
         protected virtual void HandleError(object sender, Error error)
         {
-            this.logger.LogError("Framework Kafka Error: {error}", error);
+            this.logger.KafkaLogError("Error: {error}", error);
         }
 
         /// <summary>
@@ -146,24 +153,28 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// <param name="message">Message envelope with the content to consume.</param>
         protected virtual void HandleOnConsumerError(object sender, Message message)
         {
-            this.logger.LogWarning("Framework Kafka ConsumerError: {messageContent}", message);
+            this.logger.KafkaLogWarning("ConsumerError: {messageContent}", message);
 
+            // Chain ErrorHandling for specific cases
             if (message.Error.IsLocalError)
             {
                 if (message.Error.Code == ErrorCode.Local_ValueDeserialization)
                 {
-                    this.logger.LogWarning("Consumer Value Deserialization Error Code: {errorCode} | Reason: {errorMessage}", message.Error.Code, message.Error.Reason);
+                    this.logger.KafkaLogWarning("Consumer Value Deserialization Error Code: {errorCode} | Reason: {errorMessage}", message.Error.Code, message.Error.Reason);
                 }
 
                 if (message.Error.Code == ErrorCode.BrokerNotAvailable)
                 {
-                    this.logger.LogCritical("Consumer Broker Error: {errorCode} | Reason: {errorMessage}", message.Error.Code, message.Error.Reason);
+                    this.logger.KafkaLogCritical("Consumer Broker Error: {errorCode} | Reason: {errorMessage}", message.Error.Code, message.Error.Reason);
                 }
 
                 return;
             }
-            
-            this.RequeueMessageOnError(message);
+
+            if (this.allowRetries)
+            {
+                this.RequeueMessageOnError(message);
+            }
         }
 
         // It's ugly I know, I will beautify the shit out this later. for now it does the work.
@@ -181,8 +192,8 @@ namespace PetProjects.Framework.Kafka.Consumer
                 {
                     return;
                 }
-                
-                this.logger.LogCritical("Critical Error when retrying to send message. Topic: {topic} | Message: {message} | Timestamp: {timestamp} | Error: {error}", message.Topic, messageContent, report.Timestamp, report.Error);
+
+                this.logger.KafkaLogCritical("Critical Error when retrying to send message. Topic: {topic} | Message: {message} | Timestamp: {timestamp} | Error: {error}", message.Topic, messageContent, report.Timestamp, report.Error);
             }
         }
 
@@ -195,7 +206,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         {
             if (consumerMessage.Value == null)
             {
-                this.logger.LogInformation("Framework Kafka ConsumerMessage has no content: {consumerMessage}", consumerMessage);
+                this.logger.KafkaLogInfo("ConsumerMessage has no content: {consumerMessage}", consumerMessage);
                 return;
             }
 
@@ -210,7 +221,7 @@ namespace PetProjects.Framework.Kafka.Consumer
 
             if (!this.messageHandlers.ContainsKey(type))
             {
-                this.logger.LogError("An handler for this type of message does not exist. Please define one with Receive<> method!");
+                this.logger.KafkaLogError("An handler for this {type} of message does not exist. Please define one with Receive<> method!", type);
                 return;
             }
 
@@ -219,7 +230,6 @@ namespace PetProjects.Framework.Kafka.Consumer
 
         private void StopConsumer()
         {
-            this.tokenSource.Cancel();
             this.tokenSource?.Dispose();
 
             if (this.confluentConsumer == null)

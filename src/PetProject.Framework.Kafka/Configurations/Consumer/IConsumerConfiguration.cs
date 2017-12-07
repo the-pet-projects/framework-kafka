@@ -4,7 +4,11 @@ namespace PetProjects.Framework.Kafka.Configurations.Consumer
 
     public interface IConsumerConfiguration
     {
-        int? PollTimeout { get; }
+        int MaxPollIntervalInMs { get; }
+
+        bool AutoCommit { get; }
+
+        int AutoCommitInterval { get; }
 
         Dictionary<string, object> GetConfigurations();
     }

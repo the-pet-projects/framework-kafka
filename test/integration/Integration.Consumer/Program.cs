@@ -25,7 +25,7 @@
                         {
                             "marx-petprojects.westeurope.cloudapp.azure.com:9092"
                         })
-                    .SetPollTimeout(10000));
+                    .SetPollIntervalInMs(10000));
 
             servicesCollection.AddSingleton<IConsumer<ItemCommandsV1>, TestConsumer>();
 

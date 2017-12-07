@@ -3,13 +3,14 @@ namespace PetProjects.Framework.Kafka.Producer
     using System;
     using System.Text;
     using System.Threading.Tasks;
-    using Configurations.Producer;
+
     using Confluent.Kafka;
     using Confluent.Kafka.Serialization;
-    using Contracts.Topics;
-    using Exceptions;
-    using Serializer;
-    using Wrapper;
+
+    using PetProjects.Framework.Kafka.Configurations.Producer;
+    using PetProjects.Framework.Kafka.Contracts.Topics;
+    using PetProjects.Framework.Kafka.Serializer;
+    using PetProjects.Framework.Kafka.Wrapper;
 
     public class Producer<TBaseMessage> : IProducer<TBaseMessage>
         where TBaseMessage : IMessage
@@ -27,7 +28,7 @@ namespace PetProjects.Framework.Kafka.Producer
             this.topic = topic;
         }
 
-        public async Task Produce<TMessage>(TMessage message)
+        public void Produce<TMessage>(TMessage message, IDeliveryHandler<string, MessageWrapper> deliveryHandler = null)
             where TMessage : IMessage
         {
             var topicName = this.topic.TopicFullName;
@@ -35,12 +36,7 @@ namespace PetProjects.Framework.Kafka.Producer
 
             var wrappedMessage = MessageWrapperFactory.Create(message);
 
-            var report = await this.confluentProducer.ProduceAsync(topicName, partitionKey, wrappedMessage);
-
-            if (report.Error.HasError)
-            {
-                throw new ProducerErrorException<TMessage>(topicName, message, report.Timestamp, report.Error);
-            }
+            this.confluentProducer.ProduceAsync(topicName, partitionKey, wrappedMessage, deliveryHandler);
         }
 
         public async Task<Message<string, MessageWrapper>> ProduceAsync<TMessage>(TMessage message)
