@@ -18,14 +18,16 @@ namespace PetProjects.Framework.Kafka.Producer
         private readonly Producer<string, MessageWrapper> confluentProducer;
 
         private readonly ITopic<TBaseMessage> topic;
+        private readonly IProducerConfiguration configuration;
 
         private bool disposed;
 
-        public Producer(ITopic<TBaseMessage> topic, ProducerConfiguration configuration)
+        public Producer(ITopic<TBaseMessage> topic, IProducerConfiguration configuration)
         {
             this.confluentProducer = new Producer<string, MessageWrapper>(configuration.GetConfigurations(), new StringSerializer(Encoding.UTF8), new JsonSerializer<MessageWrapper>());
 
             this.topic = topic;
+            this.configuration = configuration;
         }
 
         public void Produce<TMessage>(TMessage message, IDeliveryHandler<string, MessageWrapper> deliveryHandler = null)
