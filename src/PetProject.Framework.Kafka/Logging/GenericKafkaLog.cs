@@ -16,27 +16,27 @@
 
         public void KafkaLogWarning(string message, params object[] args)
         {
-            this.logger.LogWarning(this.BuildMessage(message), LogConstants.LogTypes.Kafka, args);
+            this.logger.KafkaLogWarning(message, args);
         }
 
         public void KafkaLogInfo(string message, params object[] args)
         {
-            this.logger.LogInformation(this.BuildMessage(message), LogConstants.LogTypes.Kafka, args);
+            this.logger.KafkaLogInfo(message, args);
         }
 
         public void KafkaLogCritical(string message, params object[] args)
         {
-            this.logger.LogCritical(this.BuildMessage(message), LogConstants.LogTypes.Kafka, args);
+            this.logger.KafkaLogCritical(message, args);
         }
 
         public void KafkaLogError(string message, params object[] args)
         {
-            this.logger.LogError(this.BuildMessage(message), LogConstants.LogTypes.Kafka, args);
+            this.logger.KafkaLogError(message, args);
         }
 
-        private string BuildMessage(string message)
+        public void KafkaLogTrace(string message, params object[] args)
         {
-            return $"{LogConstants.LogMessages.OriginMessage}{message}";
+            this.logger.KafkaLogTrace(message, args);
         }
     }
 }
