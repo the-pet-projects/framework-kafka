@@ -4,7 +4,7 @@
     {
         public static class LogMessages
         {
-            public const string OriginMessage = "Origin {origin} | ";
+            public const string OriginMessage = "LogType {logType} | ";
         }
 
         public static class LogTypes

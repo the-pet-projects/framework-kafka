@@ -1,6 +1,5 @@
 namespace PetProjects.Framework.Kafka.Configurations.Consumer
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -12,17 +11,17 @@ namespace PetProjects.Framework.Kafka.Configurations.Consumer
         {
             if (string.IsNullOrWhiteSpace(groupId))
             {
-                throw new ArgumentException("GroupId cannot be null or whitespace. Please fix.");
+                throw new ConsumerConfigurationException(ExceptionMessages.Common.InvalidGroupIdInput);
             }
 
             if (string.IsNullOrWhiteSpace(clientId))
             {
-                throw new ArgumentException("ClientId cannot be null or whitespace. Please fix.");
+                throw new ConsumerConfigurationException(ExceptionMessages.Common.InvalidClientIdInput);
             }
 
             if (bootstrapServers == null || !bootstrapServers.Any())
             {
-                throw new ArgumentException("There is no bootstrap server configured. Please add at least one.");
+                throw new ConsumerConfigurationException(ExceptionMessages.Common.InvalidBoostrapServers);
             }
 
             this.Configurations = new Dictionary<string, object>
@@ -52,10 +51,10 @@ namespace PetProjects.Framework.Kafka.Configurations.Consumer
         {
             if (interval <= 0)
             {
-                throw new ConsumerConfigurationException($"Interval must be greater than 0.");
+                throw new ConsumerConfigurationException(ExceptionMessages.ConsumerErrorMessages.InvalidIntervalInput);
             }
 
-            this.AutoCommit = !this.AutoCommit;
+            this.AutoCommit = true;
             this.AutoCommitInterval = interval;
 
             return this;
@@ -65,7 +64,7 @@ namespace PetProjects.Framework.Kafka.Configurations.Consumer
         {
             if (pollInterval <= 0)
             {
-                throw new ConsumerConfigurationException($"PollInterval must be greater than 0.");
+                throw new ConsumerConfigurationException(ExceptionMessages.ConsumerErrorMessages.InvalidPollIntervalInput);
             }
 
             this.MaxPollIntervalInMs = pollInterval;

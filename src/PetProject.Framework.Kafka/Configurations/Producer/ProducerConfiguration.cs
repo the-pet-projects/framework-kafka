@@ -1,6 +1,5 @@
 ﻿namespace PetProjects.Framework.Kafka.Configurations.Producer
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -8,7 +7,7 @@
 
     public class ProducerConfiguration : IProducerConfiguration
     {
-        private const int MaxInFlightRequest = 5;
+        private const int MaxInFlightRequests = 5;
 
         private readonly Dictionary<AcksType, string> acksMap = new Dictionary<AcksType, string>
         {
@@ -19,9 +18,14 @@
 
         public ProducerConfiguration(string clientId, IList<string> bootstrapServers)
         {
+            if (string.IsNullOrWhiteSpace(clientId))
+            {
+                throw new ProducerConfigurationException(ExceptionMessages.Common.InvalidBoostrapServers);
+            }
+
             if (!bootstrapServers.Any())
             {
-                throw new ArgumentException("There is no bootstrap server configured. Please add at least one.");
+                throw new ProducerConfigurationException(ExceptionMessages.Common.InvalidBoostrapServers);
             }
 
             this.Configurations = new Dictionary<string, object>
@@ -32,17 +36,8 @@
         }
 
         public ProducerConfiguration(string clientId, string bootstrapServers)
+            : this(clientId, bootstrapServers.Split(',').ToList())
         {
-            if (string.IsNullOrWhiteSpace(bootstrapServers))
-            {
-                throw new ArgumentException("There is no bootstrap server configured. Please add at least one.");
-            }
-
-            this.Configurations = new Dictionary<string, object>
-            {
-                { "bootstrap.servers", bootstrapServers },
-                { "client.id", clientId }
-            };
         }
 
         public AcksType Acks { get; private set; }
@@ -59,12 +54,12 @@
         {
             if (retries <= 0)
             {
-                throw new ProducerConfigurationException($"Retries must be greater than 0.");
+                throw new ProducerConfigurationException(ExceptionMessages.ProducerErrorMessages.InvalidRetriesIdempotence);
             }
 
-            if (maxInFlightRequestPerConnection <= 0 || maxInFlightRequestPerConnection > MaxInFlightRequest)
+            if (maxInFlightRequestPerConnection <= 0 || maxInFlightRequestPerConnection > MaxInFlightRequests)
             {
-                throw new ProducerConfigurationException($"MaxInFlightRequestPerConnection must be less than or equal to {MaxInFlightRequest}.");
+                throw new ProducerConfigurationException(ExceptionMessages.ProducerErrorMessages.InvalidMaxInFlightRequestPerConnectionIdempotence(MaxInFlightRequests));
             }
 
             this.Acks = AcksType.All;
@@ -85,6 +80,13 @@
 
         public ProducerConfiguration WithBatch(int batchSize)
         {
+            if (batchSize <= 0)
+            {
+                throw new ProducerConfigurationException(ExceptionMessages.ProducerErrorMessages.InvalidBatchSizeInput);
+            }
+
+            this.BatchSize = batchSize;
+
             this.Configurations.Add("batch.size", batchSize);
 
             return this;
