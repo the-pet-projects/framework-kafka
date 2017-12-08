@@ -10,8 +10,6 @@
 
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
-
-    using PetProject.Framework.Kafka.Task.Utilities;
     using PetProjects.Framework.Kafka.Consumer;
 
     internal class Program
@@ -37,7 +35,7 @@
                 }
             });
 
-            var task = ConsumerTaskUtilities.StartLongRunningConsumer(consumer);
+            consumer.StartConsuming();
 
             Console.WriteLine("Ctrl-C to exit.");
 
@@ -49,9 +47,7 @@
 
             Program.QuitEvent.WaitOne();
 
-            consumer.StopConsuming();
-            task.Wait();
-
+            consumer.Dispose();
             Console.WriteLine("Terminating consumer.");
         }
 

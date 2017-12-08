@@ -28,6 +28,8 @@
             public const string InvalidIntervalInput = "Interval must be greater than 0.";
 
             public const string InvalidPollIntervalInput = "PollInterval must be greater than 0.";
+
+            public const string CouldNotDisposeConsumer = "Could dispose consumer";
         }
     }
 }

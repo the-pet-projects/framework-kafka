@@ -8,7 +8,6 @@ namespace PetProjects.Framework.Kafka.Consumer
 
     using Confluent.Kafka;
     using Confluent.Kafka.Serialization;
-
     using Microsoft.Extensions.Logging;
 
     using PetProjects.Framework.Kafka.Configurations.Consumer;
@@ -17,6 +16,7 @@ namespace PetProjects.Framework.Kafka.Consumer
     using PetProjects.Framework.Kafka.Logging;
     using PetProjects.Framework.Kafka.Serializer;
     using PetProjects.Framework.Kafka.Wrapper;
+    using Utilities;
 
     public abstract class Consumer<TBaseMessage> : IConsumer<TBaseMessage>
         where TBaseMessage : IMessage
@@ -30,6 +30,8 @@ namespace PetProjects.Framework.Kafka.Consumer
 
         private Consumer<string, MessageWrapper> confluentConsumer;
 
+        private Task consumerTask;
+
         protected Consumer(ITopic<TBaseMessage> topic, IConsumerConfiguration configuration, ILogger logger, bool allowRetries = false)
         {
             this.logger = new GenericKafkaLog(logger);
@@ -42,51 +44,39 @@ namespace PetProjects.Framework.Kafka.Consumer
 
         /// <inheritdoc />
         /// <summary>
-        /// Flag which signals if the consumer is running.
-        /// </summary>
-        public bool IsRunning { get; private set; }
-
-        /// <inheritdoc />
-        /// <summary>
         /// Method to initiate the consumer.
         /// Messages must be committed manually.
         /// </summary>
         public void StartConsuming()
         {
-            this.confluentConsumer = new Consumer<string, MessageWrapper>(
-                this.configuration.GetConfigurations(),
-                new StringDeserializer(Encoding.UTF8),
-                new JsonDeserializer<MessageWrapper>());
-
-            this.IsRunning = true;
-
-            this.confluentConsumer.OnMessage += this.HandleMessage;
-
-            this.confluentConsumer.OnConsumeError += this.HandleOnConsumerError;
-
-            this.confluentConsumer.OnError += this.HandleError;
-
-            this.confluentConsumer.OnLog += this.HandleLogs;
-
-            this.confluentConsumer.OnStatistics += this.HandleStatistics;
-
-            this.confluentConsumer.Subscribe(this.topic.TopicFullName);
-
-            while (this.tokenSource != null && !this.tokenSource.IsCancellationRequested && this.IsRunning)
+            this.consumerTask = ConsumerTaskUtilities.StartLongRunningConsumer(() =>
             {
-                this.confluentConsumer.Poll(this.configuration.MaxPollIntervalInMs);
-            }
-        }
+                this.confluentConsumer = new Consumer<string, MessageWrapper>(
+                    this.configuration.GetConfigurations(),
+                    new StringDeserializer(Encoding.UTF8),
+                    new JsonDeserializer<MessageWrapper>());
 
-        /// <inheritdoc />
-        /// <summary>
-        /// Method to signal the consumer to stop.
-        /// </summary>
-        public void StopConsuming()
-        {
-            this.IsRunning = false;
-            this.tokenSource.Cancel();
-            this.Dispose();
+                this.logger.KafkaLogWarning("Consumer is Starting.");
+
+                this.confluentConsumer.OnMessage += this.HandleMessage;
+
+                this.confluentConsumer.OnConsumeError += this.HandleOnConsumerError;
+
+                this.confluentConsumer.OnError += this.HandleError;
+
+                this.confluentConsumer.OnLog += this.HandleLogs;
+
+                this.confluentConsumer.OnStatistics += this.HandleStatistics;
+
+                this.confluentConsumer.Subscribe(this.topic.TopicFullName);
+
+                while (this.tokenSource != null && !this.tokenSource.IsCancellationRequested)
+                {
+                    this.confluentConsumer.Poll(this.configuration.MaxPollIntervalInMs);
+                }
+
+                this.logger.KafkaLogWarning("Consumer is Stopped.");
+            });
         }
 
         /// <inheritdoc />
@@ -100,21 +90,34 @@ namespace PetProjects.Framework.Kafka.Consumer
 
         public void Dispose()
         {
-            if (this.IsRunning)
+            if (this.consumerTask != null)
             {
-                return;
+                this.logger.KafkaLogWarning("Consumer is Stopping.");
+                this.tokenSource.Cancel();
+
+                this.consumerTask.Wait();
+                this.consumerTask.Dispose();
+
+                if (this.confluentConsumer == null)
+                {
+                    return;
+                }
+
+                this.confluentConsumer.Dispose();
+                this.confluentConsumer = null;
+                this.logger.KafkaLogWarning("Consumer is Disposed.");
             }
 
-            this.StopConsumer();
+            this.tokenSource?.Dispose();
         }
 
         /// <inheritdoc />
         /// <summary>
         /// Decorator around Confluent Consumer to commit messages asynchronously after success.
         /// </summary>
-        public async Task<CommittedOffsets> CommitAsync()
+        public Task<CommittedOffsets> CommitAsync()
         {
-            return await this.confluentConsumer.CommitAsync();
+            return this.confluentConsumer.CommitAsync();
         }
 
         /// <summary>
@@ -227,19 +230,6 @@ namespace PetProjects.Framework.Kafka.Consumer
             }
 
             this.messageHandlers[type].DynamicInvoke(wrappedMessage.Message);
-        }
-
-        private void StopConsumer()
-        {
-            this.tokenSource?.Dispose();
-
-            if (this.confluentConsumer == null)
-            {
-                return;
-            }
-
-            this.confluentConsumer.Dispose();
-            this.confluentConsumer = null;
         }
     }
 }

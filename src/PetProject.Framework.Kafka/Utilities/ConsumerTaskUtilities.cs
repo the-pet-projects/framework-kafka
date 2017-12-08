@@ -1,5 +1,6 @@
-﻿namespace PetProject.Framework.Kafka.Task.Utilities
+﻿namespace PetProjects.Framework.Kafka.Utilities
 {
+    using System;
     using System.Threading.Tasks;
 
     using PetProjects.Framework.Kafka.Consumer;
@@ -11,6 +12,11 @@
             where TBaseMessage : IMessage
         {
             return Task.Factory.StartNew(consumer.StartConsuming, TaskCreationOptions.LongRunning);
+        }
+
+        public static Task StartLongRunningConsumer(Action action)
+        {
+            return Task.Factory.StartNew(action, TaskCreationOptions.LongRunning);
         }
     }
 }
