@@ -4,13 +4,14 @@
 
     using System.Linq;
     using System.Threading;
-    using System.Threading.Tasks;
 
     using Integration.Consumer.Configs;
     using Integration.Contracts;
 
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
+
+    using PetProject.Framework.Kafka.Task.Utilities;
     using PetProjects.Framework.Kafka.Consumer;
 
     internal class Program
@@ -36,7 +37,7 @@
                 }
             });
 
-            var task = Task.Factory.StartNew(() => consumer.StartConsuming(), TaskCreationOptions.LongRunning);
+            var task = ConsumerTaskUtilities.StartLongRunningConsumer(consumer);
 
             Console.WriteLine("Ctrl-C to exit.");
 

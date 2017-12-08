@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\PetProject.Framework.Kafka.Contracts\PetProjects.Framework.Kafka.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\src\PetProject.Framework.Kafka.Task.Utilities\PetProject.Framework.Kafka.Task.Utilities.csproj" />
     <ProjectReference Include="..\..\..\src\PetProject.Framework.Kafka\PetProjects.Framework.Kafka.csproj" />
     <ProjectReference Include="..\Integration.Contracts\Integration.Contracts.csproj" />
   </ItemGroup>

@@ -19,9 +19,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Integration.Consumer", "tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Integration.Producer", "test\integration\Integration.Producer\Integration.Producer.csproj", "{288B7CA4-55B6-4C8C-9EAE-BE6988AEEB73}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Integration.Contracts", "test\integration\Integration.Contracts\Integration.Contracts.csproj", "{5B6403FD-3EF1-4628-8DC6-F22CFC8BC05E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Integration.Contracts", "test\integration\Integration.Contracts\Integration.Contracts.csproj", "{5B6403FD-3EF1-4628-8DC6-F22CFC8BC05E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration", "integration", "{8713E795-7AE5-49DC-8A2E-947B8D494689}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PetProject.Framework.Kafka.Task.Utilities", "src\PetProject.Framework.Kafka.Task.Utilities\PetProject.Framework.Kafka.Task.Utilities.csproj", "{00CF4B3F-6FF3-47C7-BEFD-86AFD3F49A47}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +55,10 @@ Global
 		{5B6403FD-3EF1-4628-8DC6-F22CFC8BC05E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B6403FD-3EF1-4628-8DC6-F22CFC8BC05E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B6403FD-3EF1-4628-8DC6-F22CFC8BC05E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00CF4B3F-6FF3-47C7-BEFD-86AFD3F49A47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00CF4B3F-6FF3-47C7-BEFD-86AFD3F49A47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00CF4B3F-6FF3-47C7-BEFD-86AFD3F49A47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00CF4B3F-6FF3-47C7-BEFD-86AFD3F49A47}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
