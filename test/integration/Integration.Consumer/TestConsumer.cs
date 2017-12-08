@@ -1,7 +1,9 @@
 ﻿namespace Integration.Consumer
 {
-    using Contracts;
+    using Integration.Contracts;
+
     using Microsoft.Extensions.Logging.Abstractions;
+
     using PetProjects.Framework.Kafka.Configurations.Consumer;
     using PetProjects.Framework.Kafka.Consumer;
 

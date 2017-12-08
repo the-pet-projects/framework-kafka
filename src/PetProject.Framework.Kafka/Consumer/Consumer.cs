@@ -86,6 +86,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         {
             this.IsRunning = false;
             this.tokenSource.Cancel();
+            this.Dispose();
         }
 
         /// <inheritdoc />

@@ -1,35 +1,27 @@
 ﻿namespace Integration.Consumer
 {
     using System;
-    using System.Collections.Generic;
+
     using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    using Integration.Consumer.Configs;
     using Integration.Contracts;
+
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
-    using PetProjects.Framework.Kafka.Configurations.Consumer;
     using PetProjects.Framework.Kafka.Consumer;
 
     internal class Program
     {
+        private static readonly ManualResetEvent QuitEvent = new ManualResetEvent(false);
+
         public static void Main(string[] args)
         {
             Console.WriteLine("Consumer");
 
-            var servicesCollection = new ServiceCollection();
-
-            servicesCollection.AddSingleton<IConsumerConfiguration>(
-                new ConsumerConfiguration(
-                        "group01",
-                        "consumer01",
-                        new List<string>
-                        {
-                            "marx-petprojects.westeurope.cloudapp.azure.com:9092"
-                        })
-                    .SetPollIntervalInMs(10000));
-
-            servicesCollection.AddSingleton<IConsumer<ItemCommandsV1>, TestConsumer>();
-
-            var serviceProvider = servicesCollection.BuildServiceProvider();
+            var serviceProvider = new Configurations().ServiceProvider;
 
             var consumer = serviceProvider.GetService<IConsumer<ItemCommandsV1>>();
 
@@ -44,22 +36,22 @@
                 }
             });
 
-            consumer.StartConsuming();
-
-            Console.WriteLine(consumer.IsRunning ? "Started!!" : "Not Started!!");
-
-            var cancelled = false;
-            Console.CancelKeyPress += (_, e) =>
-            {
-                e.Cancel = true; // prevent the process from terminating.
-                cancelled = true;
-            };
+            var task = Task.Factory.StartNew(() => consumer.StartConsuming(), TaskCreationOptions.LongRunning);
 
             Console.WriteLine("Ctrl-C to exit.");
-            while (!cancelled)
+
+            Console.CancelKeyPress += (_, e) =>
             {
-                consumer.StopConsuming();
-            }
+                Program.QuitEvent.Set();
+                e.Cancel = true; // prevent the process from terminating.
+            };
+
+            Program.QuitEvent.WaitOne();
+
+            consumer.StopConsuming();
+            task.Wait();
+
+            Console.WriteLine("Terminating consumer.");
         }
 
         private static void HandleCreateItem(CreateItemV1 message)
