@@ -1,6 +1,8 @@
 ﻿namespace PetProjects.Framework.Kafka.Serializer
 {
+    using System.Collections.Generic;
     using System.Text;
+
     using Confluent.Kafka.Serialization;
     using Newtonsoft.Json;
 
@@ -19,9 +21,14 @@
             };
         }
 
-        public byte[] Serialize(T data)
+        public byte[] Serialize(string topic, T data)
         {
-            return this.stringSerializer.Serialize(JsonConvert.SerializeObject((object)data, this.settings));
+            return this.stringSerializer.Serialize(topic, JsonConvert.SerializeObject((object)data, this.settings));
+        }
+
+        public IEnumerable<KeyValuePair<string, object>> Configure(IEnumerable<KeyValuePair<string, object>> config, bool isKey)
+        {
+            return config;
         }
     }
 }

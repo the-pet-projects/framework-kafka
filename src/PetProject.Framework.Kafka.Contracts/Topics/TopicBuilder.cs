@@ -1,7 +1,8 @@
 ﻿namespace PetProjects.Framework.Kafka.Contracts.Topics
 {
     using System;
-    using Exceptions;
+
+    using PetProjects.Framework.Kafka.Contracts.Exceptions;
 
     public sealed class TopicBuilder
     {

@@ -2,10 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PetProjects.Framework.Kafka.Contracts" Version="0.1.17339.4-beta" />
+    <ProjectReference Include="..\..\..\src\PetProject.Framework.Kafka.Contracts\PetProjects.Framework.Kafka.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

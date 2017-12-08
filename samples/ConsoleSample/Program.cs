@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Contracts;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
@@ -32,16 +33,15 @@
 
             var consumer = serviceProvider.GetService<IConsumer<ItemCommandsV1>>();
 
-            consumer.ConsumerHandlerFor<ItemCommandsV1>((message) =>
-            {
-                HandleGenericItemCommands(message);
-                CommitAsync(consumer);
-            });
-
             consumer.ConsumerHandlerFor<CreateItemV1>((message) =>
             {
                 HandleCreateItem(message);
-                CommitAsync(consumer);
+                var committedOffsets = consumer.CommitAsync().Result;
+
+                if (committedOffsets.Offsets.Any())
+                {
+                    Console.WriteLine($"CommittedOffsets: {JsonConvert.SerializeObject(committedOffsets)}");
+                }
             });
 
             var initiated = consumer.StartConsuming();
@@ -62,19 +62,9 @@
             }
         }
 
-        private static void HandleGenericItemCommands(ItemCommandsV1 message)
-        {
-            Console.WriteLine($"Message: {JsonConvert.SerializeObject(message)} |  Partition: {message.GetPartitionKey()}");
-        }
-
         private static void HandleCreateItem(CreateItemV1 message)
         {
             Console.WriteLine($"Message: {JsonConvert.SerializeObject(message)} |  Partition: {message.GetPartitionKey()} | Derived: {message.Derived}");
-        }
-
-        private static void CommitAsync(IConsumer<ItemCommandsV1> consumer)
-        {
-            consumer.CommitAsync();
         }
     }
 }

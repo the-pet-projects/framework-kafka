@@ -4,96 +4,120 @@ namespace PetProjects.Framework.Kafka.Consumer
     using System.Collections.Generic;
     using System.Text;
     using System.Threading;
-    using Configurations.Consumer;
+    using System.Threading.Tasks;
+
     using Confluent.Kafka;
     using Confluent.Kafka.Serialization;
-    using Contracts.Topics;
-    using Newtonsoft.Json;
-    using Wrapper;
+    using Microsoft.Extensions.Logging;
+
+    using PetProjects.Framework.Kafka.Configurations.Consumer;
+    using PetProjects.Framework.Kafka.Configurations.Producer;
+    using PetProjects.Framework.Kafka.Contracts.Topics;
+    using PetProjects.Framework.Kafka.Logging;
+    using PetProjects.Framework.Kafka.Serializer;
+    using PetProjects.Framework.Kafka.Wrapper;
+    using Utilities;
 
     public abstract class Consumer<TBaseMessage> : IConsumer<TBaseMessage>
         where TBaseMessage : IMessage
     {
+        private readonly GenericKafkaLog logger;
+        private readonly bool allowRetries;
         private readonly IConsumerConfiguration configuration;
         private readonly CancellationTokenSource tokenSource;
         private readonly Dictionary<Type, Delegate> messageHandlers;
-        private readonly JsonSerializerSettings settings;
         private readonly ITopic<TBaseMessage> topic;
 
-        private Consumer<string, string> confluentConsumer;
+        private Consumer<string, MessageWrapper> confluentConsumer;
 
-        protected Consumer(ITopic<TBaseMessage> topic, IConsumerConfiguration configuration)
+        private Task consumerTask;
+
+        protected Consumer(ITopic<TBaseMessage> topic, IConsumerConfiguration configuration, ILogger logger, bool allowRetries = false)
         {
+            this.logger = new GenericKafkaLog(logger);
+            this.allowRetries = allowRetries;
             this.messageHandlers = new Dictionary<Type, Delegate>();
             this.tokenSource = new CancellationTokenSource();
             this.configuration = configuration;
             this.topic = topic;
-
-            this.settings = new JsonSerializerSettings
-            {
-                TypeNameHandling = TypeNameHandling.Auto
-            };
         }
 
         /// <inheritdoc />
         /// <summary>
         /// Method to initiate the consumer.
         /// Messages must be committed manually.
-        /// Inititates a task in the backgroung with the LongRunning flag.
         /// </summary>
-        public bool StartConsuming()
+        public void StartConsuming()
         {
-            this.confluentConsumer = new Consumer<string, string>(
-                this.configuration.GetConfigurations(),
-                new StringDeserializer(Encoding.UTF8),
-                new StringDeserializer(Encoding.UTF8));
-
-            this.confluentConsumer.OnMessage += this.HandleMessage;
-
-            this.confluentConsumer.OnConsumeError += this.HandleOnConsumerError;
-
-            this.confluentConsumer.OnError += this.HandleError;
-
-            this.confluentConsumer.OnLog += this.HandleLogs;
-
-            this.confluentConsumer.OnStatistics += this.HandleStatistics;
-
-            this.confluentConsumer.Subscribe(this.topic.TopicFullName);
-
-            while (this.tokenSource != null && !this.tokenSource.IsCancellationRequested)
+            this.consumerTask = ConsumerTaskUtilities.StartLongRunningConsumer(() =>
             {
-                this.confluentConsumer.Poll(this.configuration.PollTimeout ?? 100);
-            }
+                this.confluentConsumer = new Consumer<string, MessageWrapper>(
+                    this.configuration.GetConfigurations(),
+                    new StringDeserializer(Encoding.UTF8),
+                    new JsonDeserializer<MessageWrapper>());
 
-            return true;
+                this.logger.KafkaLogWarning("Consumer is Starting.");
+
+                this.confluentConsumer.OnMessage += this.HandleMessage;
+
+                this.confluentConsumer.OnConsumeError += this.HandleOnConsumerError;
+
+                this.confluentConsumer.OnError += this.HandleError;
+
+                this.confluentConsumer.OnLog += this.HandleLogs;
+
+                this.confluentConsumer.OnStatistics += this.HandleStatistics;
+
+                this.confluentConsumer.Subscribe(this.topic.TopicFullName);
+
+                while (this.tokenSource != null && !this.tokenSource.IsCancellationRequested)
+                {
+                    this.confluentConsumer.Poll(this.configuration.MaxPollIntervalInMs);
+                }
+
+                this.logger.KafkaLogWarning("Consumer is Stopped.");
+            });
         }
 
-        public void ConsumerHandlerFor<TMessage>(Action<TMessage> handler)
+        /// <inheritdoc />
+        /// <summary>
+        /// Handler for each message to be consumed inside the topic.
+        /// </summary>
+        public void Receive<TMessage>(Action<TMessage> handler)
         {
             this.messageHandlers[typeof(TMessage)] = handler;
         }
 
         public void Dispose()
         {
-            this.tokenSource.Cancel();
-            this.tokenSource?.Dispose();
-
-            if (this.confluentConsumer == null)
+            if (this.consumerTask != null)
             {
-                return;
+                this.logger.KafkaLogWarning("Consumer is Stopping.");
+                this.tokenSource.Cancel();
+
+                this.consumerTask.Wait();
+                this.consumerTask.Dispose();
+
+                if (this.confluentConsumer == null)
+                {
+                    return;
+                }
+
+                this.confluentConsumer.Dispose();
+                this.confluentConsumer = null;
+                this.logger.KafkaLogWarning("Consumer is Disposed.");
             }
 
-            this.confluentConsumer.Dispose();
-            this.confluentConsumer = null;
+            this.tokenSource?.Dispose();
         }
 
         /// <inheritdoc />
         /// <summary>
         /// Decorator around Confluent Consumer to commit messages asynchronously after success.
         /// </summary>
-        public void CommitAsync()
+        public Task<CommittedOffsets> CommitAsync()
         {
-            this.confluentConsumer.CommitAsync();
+            return this.confluentConsumer.CommitAsync();
         }
 
         /// <summary>
@@ -101,56 +125,108 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// </summary>
         /// <param name="sender">Message sender.</param>
         /// <param name="statistics">Statistics returned from Confluent Consumer.</param>
-        protected abstract void HandleStatistics(object sender, string statistics);
+        protected virtual void HandleStatistics(object sender, string statistics)
+        {
+            this.logger.KafkaLogInfo("Statistics: {statistics}", statistics);
+        }
 
         /// <summary>
         /// Method to add custom treatment to Consumer Logs.
         /// </summary>
         /// <param name="sender">Message sender.</param>
         /// <param name="logMessage">Log Message object returned from Confluent Consumer.</param>
-        protected abstract void HandleLogs(object sender, LogMessage logMessage);
+        protected virtual void HandleLogs(object sender, LogMessage logMessage)
+        {
+            this.logger.KafkaLogInfo("LogMessage: {logMessage}", logMessage);
+        }
 
         /// <summary>
         /// Method to add custom treatment to Consumer Errors.
         /// </summary>
         /// <param name="sender">Message sender</param>
         /// <param name="error">Error object returned from Confluent Consumer</param>
-        protected abstract void HandleError(object sender, Error error);
-
-        /// <summary>
-        /// Must be implemented by the client in order to add Errors while consuming.
-        /// </summary>
-        /// <param name="sender">Message sender.</param>
-        /// <param name="message">Message envelope with the content to consume.</param>
-        protected abstract void HandleOnConsumerError(object sender, Confluent.Kafka.Message message);
-
-        /// <summary>
-        /// Must be implemented by the client in order to consumer messages and add custom treatment.
-        /// </summary>
-        /// <param name="sender">Message sender.</param>
-        /// <param name="message">Message envelope with the content to consume.</param>
-        protected void HandleMessage(object sender, Message<string, string> consumerMessage)
+        protected virtual void HandleError(object sender, Error error)
         {
-            if (consumerMessage.Value == null)
+            this.logger.KafkaLogError("Error: {error}", error);
+        }
+
+        /// <summary>
+        /// May be overriden by the client in order to handle consumer internal errors when consuming a message.
+        /// </summary>
+        /// <param name="sender">Message sender.</param>
+        /// <param name="message">Message envelope with the content to consume.</param>
+        protected virtual void HandleOnConsumerError(object sender, Message message)
+        {
+            this.logger.KafkaLogWarning("ConsumerError: {messageContent}", message);
+
+            // Chain ErrorHandling for specific cases
+            if (message.Error.IsLocalError)
             {
+                if (message.Error.Code == ErrorCode.Local_ValueDeserialization)
+                {
+                    this.logger.KafkaLogWarning("Consumer Value Deserialization Error Code: {errorCode} | Reason: {errorMessage}", message.Error.Code, message.Error.Reason);
+                }
+
+                if (message.Error.Code == ErrorCode.BrokerNotAvailable)
+                {
+                    this.logger.KafkaLogCritical("Consumer Broker Error: {errorCode} | Reason: {errorMessage}", message.Error.Code, message.Error.Reason);
+                }
+
                 return;
             }
 
-            MessageWrapper wrappedMessage;
-            try
+            if (this.allowRetries)
             {
-                wrappedMessage = JsonConvert.DeserializeObject<MessageWrapper>(consumerMessage.Value, this.settings);
+                this.RequeueMessageOnError(message);
             }
-            catch (Exception)
+        }
+
+        // It's ugly I know, I will beautify the shit out this later. for now it does the work.
+        protected virtual void RequeueMessageOnError(Message message)
+        {
+            var bootstrapServers = this.configuration.GetConfigurations()["bootstrap.servers"] as string;
+            using (var producer = new Producer<string, MessageWrapper>(new ProducerConfiguration($"retry-producer-{Guid.NewGuid()}", bootstrapServers).GetConfigurations(), new StringSerializer(Encoding.UTF8), new JsonSerializer<MessageWrapper>()))
             {
-                throw new Exception("Consumer error when deserializing.");
+                var key = new StringDeserializer(Encoding.UTF8).Deserialize(message.Topic, message.Key);
+                var messageContent = new JsonDeserializer<MessageWrapper>().Deserialize(message.Topic, message.Value);
+
+                var report = producer.ProduceAsync(message.Topic, key, messageContent).Result;
+
+                if (!report.Error.HasError)
+                {
+                    return;
+                }
+
+                this.logger.KafkaLogCritical("Critical Error when retrying to send message. Topic: {topic} | Message: {message} | Timestamp: {timestamp} | Error: {error}", message.Topic, messageContent, report.Timestamp, report.Error);
+            }
+        }
+
+        /// <summary>
+        /// May be overriden by the client in order to consumer messages and add custom treatment.
+        /// </summary>
+        /// <param name="sender">Message sender.</param>
+        /// <param name="consumerMessage">Message envelope with key value pair content.</param>
+        protected void HandleMessage(object sender, Message<string, MessageWrapper> consumerMessage)
+        {
+            if (consumerMessage.Value == null)
+            {
+                this.logger.KafkaLogInfo("ConsumerMessage has no content: {consumerMessage}", consumerMessage);
+                return;
             }
 
+            var wrappedMessage = consumerMessage.Value;
+
+            this.CallHandler(wrappedMessage);
+        }
+
+        protected void CallHandler(MessageWrapper wrappedMessage)
+        {
             var type = Type.GetType(wrappedMessage.MessageType);
 
             if (!this.messageHandlers.ContainsKey(type))
             {
-                throw new Exception("An handler for this type of message does not exist. Please define one with ConsumerHandlerFor<> method!");
+                this.logger.KafkaLogError("An handler for this {type} of message does not exist. Please define one with Receive<> method!", type);
+                return;
             }
 
             this.messageHandlers[type].DynamicInvoke(wrappedMessage.Message);

@@ -1,4 +1,4 @@
-﻿namespace Contracts
+﻿namespace Integration.Contracts
 {
     using PetProjects.Framework.Kafka.Contracts.Topics;
 
