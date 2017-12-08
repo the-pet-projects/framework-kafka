@@ -34,7 +34,7 @@
 
             var pollInterval = configStore.GetAndConvertValue<int>("kafka/consumer/pollInterval");
             var brokers = configStore.GetAndConvertValue<string>("kafka/brokersList").Split(',');
-            var groupId = configStore.GetAndConvertValue<string>("kafka/consumer/groupId");
+            var groupId = configStore.GetAndConvertValue<string>("kafka/consumer/consumerGroupId");
             var clientIdPrefix = configStore.GetAndConvertValue<string>("kafka/consumer/clientIdPrefix");
 
             this.ServiceCollection.AddSingleton<IConsumerConfiguration>(
