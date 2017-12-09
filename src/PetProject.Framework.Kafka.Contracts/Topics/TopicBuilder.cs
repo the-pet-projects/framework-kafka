@@ -6,18 +6,26 @@
 
     public sealed class TopicBuilder
     {
-        public TopicBuilder(string entityName, MessageType messageType)
+        public TopicBuilder(string entityName, MessageType messageType, string environment)
         {
             if (string.IsNullOrWhiteSpace(entityName))
             {
                 throw new ArgumentException("Entity Name cannot be Null or Whitespace. Please fix.");
             }
 
+            if (string.IsNullOrWhiteSpace(environment))
+            {
+                throw new ArgumentException("Environment cannot be Null or Whitespace. Please fix.");
+            }
+
             this.EntityName = entityName.ToLowerInvariant();
             this.MessageType = messageType.ToString().ToLowerInvariant();
+            this.Environment = environment.ToLowerInvariant();
         }
 
         public string EntityName { get; }
+
+        public string Environment { get; }
 
         public string MessageType { get; }
 
@@ -53,7 +61,7 @@
 
         private string Build()
         {
-            var topicName = $"{this.EntityName}.{this.MessageType}";
+            var topicName = $"{this.Environment}.{this.EntityName}.{this.MessageType}";
 
             if (!string.IsNullOrWhiteSpace(this.ApplicationName))
             {
