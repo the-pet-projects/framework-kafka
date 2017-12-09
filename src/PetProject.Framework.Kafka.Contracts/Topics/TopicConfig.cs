@@ -27,7 +27,7 @@
             }
 
             this.EntityName = entityName.ToLowerInvariant();
-            this.MessageType = messageType;
+            this.MessageType = messageType.ToString().ToLowerInvariant();
             this.Application = application.ToLowerInvariant();
             this.Environment = environment.ToLowerInvariant();
             this.Version = version;
@@ -35,7 +35,7 @@
 
         public string EntityName { get; }
 
-        public MessageType MessageType { get; }
+        public string MessageType { get; }
 
         public string Application { get; }
 

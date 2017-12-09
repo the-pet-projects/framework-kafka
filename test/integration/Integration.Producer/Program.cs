@@ -16,12 +16,12 @@
             MainAsync(args).Wait();
         }
 
-        // topic name : console-app-test.integration.contracts.itemcommandsv1.commands-v1
+        // topic name : dev.console-app-test-commands.createitemv1.v1
         private static async Task MainAsync(string[] args)
         {
             var producer = new Configurations().ServiceProvider.GetService<IProducer<ItemCommandsV1>>();
 
-            for (var i = 0; i < 2; i++)
+            for (var i = 0; i < 10; i++)
             {
                 var report = await producer.ProduceAsync(new CreateItemV1 { Type = "Command", ItemName = $"Item-{i}", Derived = true });
 

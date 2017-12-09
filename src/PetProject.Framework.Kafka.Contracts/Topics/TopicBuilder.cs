@@ -13,7 +13,7 @@
 
         private string Build()
         {
-            return $"{this.config.Environment}.{this.config.Application}-{this.config.EntityName}_{this.config.MessageType}.{this.config.Version}";
+            return $"{this.config.Environment}.{this.config.Application}-{this.config.MessageType}.{this.config.EntityName}.v{this.config.Version}";
         }
     }
 }
