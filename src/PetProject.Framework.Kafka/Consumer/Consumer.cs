@@ -86,7 +86,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// </summary>
         public void Receive<TMessage>(Action<TMessage> handler)
         {
-            this.messageHandlers[typeof(TMessage)] = msg => handler((TMessage) msg);
+            this.messageHandlers[typeof(TMessage)] = msg => handler((TMessage)msg);
         }
 
         /// <inheritdoc />
@@ -94,11 +94,11 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// Handler for each message to be consumed inside the topic.
         /// Return type of handler should be a boolean that will be used to determine if message is to be commited or not.
         /// </summary>
-        public void Receive<TMessage>(Func<TMessage, bool> handler)
+        public void TryReceive<TMessage>(Func<TMessage, bool> handler)
         {
             this.messageHandlers[typeof(TMessage)] = msg =>
             {
-                var result = handler((TMessage) msg);
+                var result = handler((TMessage)msg);
 
                 if (!result)
                 {
