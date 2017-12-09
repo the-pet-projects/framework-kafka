@@ -8,11 +8,11 @@
         {
         }
 
-        public string TopicFullName => this.SetTopicName().TopicFullName;
+        public string TopicFullName => this.SetTopicName("ci").TopicFullName;
 
-        public TopicBuilder SetTopicName()
+        public TopicBuilder SetTopicName(string environment)
         {
-            return new TopicBuilder($"{typeof(ItemCommandsV1).FullName}", MessageType.Commands)
+            return new TopicBuilder($"{typeof(ItemCommandsV1).FullName}", MessageType.Commands, environment)
                 .WithApplication("console-app-test")
                 .WithVersion(1);
         }
