@@ -33,7 +33,7 @@ namespace PetProjects.Framework.Kafka.Producer
         public void Produce<TMessage>(TMessage message, IDeliveryHandler<string, MessageWrapper> deliveryHandler = null)
             where TMessage : IMessage
         {
-            var topicName = this.topic.TopicFullName;
+            var topicName = this.topic.GetTopicName();
             var partitionKey = message.GetPartitionKey();
 
             var wrappedMessage = MessageWrapperFactory.Create(message);
@@ -44,7 +44,7 @@ namespace PetProjects.Framework.Kafka.Producer
         public async Task<Message<string, MessageWrapper>> ProduceAsync<TMessage>(TMessage message)
             where TMessage : IMessage
         {
-            var topicName = this.topic.TopicFullName;
+            var topicName = this.topic.GetTopicName();
             var partitionKey = message.GetPartitionKey();
 
             var wrappedMessage = MessageWrapperFactory.Create(message);

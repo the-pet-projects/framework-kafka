@@ -46,7 +46,7 @@
                 pconfig = tempProvider.GetRequiredService<IProducerConfiguration>();
             }
 
-            this.ServiceCollection.AddSingleton<IProducer<ItemCommandsV1>>(new Producer<ItemCommandsV1>(new ItemCommandsTopic(), pconfig));
+            this.ServiceCollection.AddSingleton<IProducer<ItemCommandsV1>>(new Producer<ItemCommandsV1>(new ItemCommandsTopic("dev"), pconfig));
 
             this.ServiceProvider = this.ServiceCollection.BuildServiceProvider();
         }

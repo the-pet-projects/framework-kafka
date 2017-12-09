@@ -2,8 +2,8 @@
 {
     public interface ITopic<TMessage>
     {
-        string TopicFullName { get; }
+        TopicBuilder SetTopicName();
 
-        TopicBuilder SetTopicName(string environment);
+        string GetTopicName();
     }
 }

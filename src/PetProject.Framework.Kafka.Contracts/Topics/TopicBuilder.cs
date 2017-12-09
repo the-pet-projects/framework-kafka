@@ -3,12 +3,13 @@
     using System;
 
     using PetProjects.Framework.Kafka.Contracts.Exceptions;
+    using PetProjects.Framework.Kafka.Contracts.Topics.Properties;
 
     public sealed class TopicBuilder
     {
-        public TopicBuilder(string entityName, MessageType messageType, string environment)
+        public TopicBuilder(IEntity entityName, MessageType messageType, string environment)
         {
-            if (string.IsNullOrWhiteSpace(entityName))
+            if (string.IsNullOrWhiteSpace(entityName.GetName()))
             {
                 throw new ArgumentException("Entity Name cannot be Null or Whitespace. Please fix.");
             }
@@ -18,7 +19,7 @@
                 throw new ArgumentException("Environment cannot be Null or Whitespace. Please fix.");
             }
 
-            this.EntityName = entityName.ToLowerInvariant();
+            this.EntityName = entityName.GetName().ToLowerInvariant();
             this.MessageType = messageType.ToString().ToLowerInvariant();
             this.Environment = environment.ToLowerInvariant();
         }
@@ -35,14 +36,14 @@
 
         public string TopicFullName => this.Build();
 
-        public TopicBuilder WithApplication(string applicationName)
+        public TopicBuilder WithApplication(IApplication applicationName)
         {
-            if (string.IsNullOrWhiteSpace(applicationName))
+            if (string.IsNullOrWhiteSpace(applicationName.GetName()))
             {
                 throw new InvalidApplicationNameException();
             }
 
-            this.ApplicationName = applicationName.ToLowerInvariant();
+            this.ApplicationName = applicationName.GetName().ToLowerInvariant();
 
             return this;
         }

@@ -1,20 +1,20 @@
 ﻿namespace Integration.Contracts
 {
     using PetProjects.Framework.Kafka.Contracts.Topics;
+    using TopicProperties;
 
-    public class ItemCommandsTopic : ITopic<ItemCommandsV1>
+    public class ItemCommandsTopic : TopicBase<ItemCommandsV1>
     {
-        public ItemCommandsTopic()
+        public ItemCommandsTopic(string environment)
+            : base(environment)
         {
         }
 
-        public string TopicFullName => this.SetTopicName("ci").TopicFullName;
-
-        public TopicBuilder SetTopicName(string environment)
+        public override TopicBuilder SetTopicName()
         {
-            return new TopicBuilder($"{typeof(ItemCommandsV1).FullName}", MessageType.Commands, environment)
-                .WithApplication("console-app-test")
-                .WithVersion(1);
+            return new TopicBuilder(new Item(), MessageType.Commands, this.Environment)
+                        .WithApplication(new TestApp())
+                        .WithVersion(1);
         }
     }
 }

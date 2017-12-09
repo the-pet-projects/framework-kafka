@@ -10,7 +10,7 @@
     public class TestConsumer : Consumer<ItemCommandsV1>
     {
         public TestConsumer(IConsumerConfiguration configuration)
-            : base(new ItemCommandsTopic(), configuration, NullLogger.Instance)
+            : base(new ItemCommandsTopic("dev"), configuration, NullLogger.Instance)
         {
         }
     }
