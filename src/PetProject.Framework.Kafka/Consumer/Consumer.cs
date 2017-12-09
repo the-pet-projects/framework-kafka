@@ -2,6 +2,7 @@ namespace PetProjects.Framework.Kafka.Consumer
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -15,8 +16,8 @@ namespace PetProjects.Framework.Kafka.Consumer
     using PetProjects.Framework.Kafka.Contracts.Topics;
     using PetProjects.Framework.Kafka.Logging;
     using PetProjects.Framework.Kafka.Serializer;
+    using PetProjects.Framework.Kafka.Utilities;
     using PetProjects.Framework.Kafka.Wrapper;
-    using Utilities;
 
     public abstract class Consumer<TBaseMessage> : IConsumer<TBaseMessage>
         where TBaseMessage : IMessage
@@ -77,6 +78,24 @@ namespace PetProjects.Framework.Kafka.Consumer
 
                 this.logger.KafkaLogWarning("Consumer is Stopped.");
             });
+        }
+
+        public IEnumerable<TopicPartitionError> PauseConsumer()
+        {
+            var partitions = this.GetTopicPartitions();
+
+            var partitionErrors = this.confluentConsumer.Pause(partitions);
+
+            return partitionErrors;
+        }
+
+        public IEnumerable<TopicPartitionError> ResumeConsumer()
+        {
+            var partitions = this.GetTopicPartitions();
+
+            var partitionErrors = this.confluentConsumer.Resume(partitions);
+
+            return partitionErrors;
         }
 
         /// <inheritdoc />
@@ -230,6 +249,16 @@ namespace PetProjects.Framework.Kafka.Consumer
             }
 
             this.messageHandlers[type].DynamicInvoke(wrappedMessage.Message);
+        }
+
+        private IEnumerable<TopicPartition> GetTopicPartitions()
+        {
+            var topicMetadata = this.confluentConsumer.GetMetadata(false).Topics.FirstOrDefault(t => t.Topic.Equals(this.topic.TopicFullName));
+
+            var partitionsMetadata = topicMetadata.Partitions;
+
+            var partitions = partitionsMetadata.Select(p => new TopicPartition(this.topic.TopicFullName, p.PartitionId));
+            return partitions;
         }
     }
 }
