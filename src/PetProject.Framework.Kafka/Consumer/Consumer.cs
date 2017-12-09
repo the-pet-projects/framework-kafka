@@ -13,6 +13,7 @@ namespace PetProjects.Framework.Kafka.Consumer
     using PetProjects.Framework.Kafka.Configurations.Consumer;
     using PetProjects.Framework.Kafka.Configurations.Producer;
     using PetProjects.Framework.Kafka.Contracts.Topics;
+    using PetProjects.Framework.Kafka.Exceptions;
     using PetProjects.Framework.Kafka.Logging;
     using PetProjects.Framework.Kafka.Serializer;
     using PetProjects.Framework.Kafka.Wrapper;
@@ -25,7 +26,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         private readonly bool allowRetries;
         private readonly IConsumerConfiguration configuration;
         private readonly CancellationTokenSource tokenSource;
-        private readonly Dictionary<Type, Delegate> messageHandlers;
+        private readonly Dictionary<Type, Action<object>> messageHandlers;
         private readonly ITopic<TBaseMessage> topic;
 
         private Consumer<string, MessageWrapper> confluentConsumer;
@@ -36,7 +37,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         {
             this.logger = new GenericKafkaLog(logger);
             this.allowRetries = allowRetries;
-            this.messageHandlers = new Dictionary<Type, Delegate>();
+            this.messageHandlers = new Dictionary<Type, Action<object>>();
             this.tokenSource = new CancellationTokenSource();
             this.configuration = configuration;
             this.topic = topic;
@@ -81,11 +82,29 @@ namespace PetProjects.Framework.Kafka.Consumer
 
         /// <inheritdoc />
         /// <summary>
-        /// Handler for each message to be consumed inside the topic.
+        /// Handler for each message to be consumed inside the topic. If handler doesn't throw exception, message will be commited.
         /// </summary>
         public void Receive<TMessage>(Action<TMessage> handler)
         {
-            this.messageHandlers[typeof(TMessage)] = handler;
+            this.messageHandlers[typeof(TMessage)] = msg => handler((TMessage)msg);
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Handler for each message to be consumed inside the topic.
+        /// Return type of handler should be a boolean that will be used to determine if message is to be commited or not.
+        /// </summary>
+        public void TryReceive<TMessage>(Func<TMessage, bool> handler)
+        {
+            this.messageHandlers[typeof(TMessage)] = msg =>
+            {
+                var result = handler((TMessage)msg);
+
+                if (!result)
+                {
+                    throw new InternalConsumerException();
+                }
+            };
         }
 
         public void Dispose()
@@ -109,15 +128,6 @@ namespace PetProjects.Framework.Kafka.Consumer
             }
 
             this.tokenSource?.Dispose();
-        }
-
-        /// <inheritdoc />
-        /// <summary>
-        /// Decorator around Confluent Consumer to commit messages asynchronously after success.
-        /// </summary>
-        public Task<CommittedOffsets> CommitAsync()
-        {
-            return this.confluentConsumer.CommitAsync();
         }
 
         /// <summary>
@@ -181,24 +191,40 @@ namespace PetProjects.Framework.Kafka.Consumer
             }
         }
 
+        protected void RequeueMessageOnError(Message message)
+        {
+            var key = new StringDeserializer(Encoding.UTF8).Deserialize(message.Topic, message.Key);
+            var messageContent = new JsonDeserializer<MessageWrapper>().Deserialize(message.Topic, message.Value);
+
+            this.RequeueMessageOnError(message.Topic, message.TopicPartition, message.Offset, key, messageContent);
+        }
+
         // It's ugly I know, I will beautify the shit out this later. for now it does the work.
-        protected virtual void RequeueMessageOnError(Message message)
+        protected virtual void RequeueMessageOnError(string topicName, TopicPartition topicPartition, Offset offset, string key, MessageWrapper messageValue)
         {
             var bootstrapServers = this.configuration.GetConfigurations()["bootstrap.servers"] as string;
+
             using (var producer = new Producer<string, MessageWrapper>(new ProducerConfiguration($"retry-producer-{Guid.NewGuid()}", bootstrapServers).GetConfigurations(), new StringSerializer(Encoding.UTF8), new JsonSerializer<MessageWrapper>()))
             {
-                var key = new StringDeserializer(Encoding.UTF8).Deserialize(message.Topic, message.Key);
-                var messageContent = new JsonDeserializer<MessageWrapper>().Deserialize(message.Topic, message.Value);
-
-                var report = producer.ProduceAsync(message.Topic, key, messageContent).Result;
+                var report = producer.ProduceAsync(topicName, key, messageValue).Result;
 
                 if (!report.Error.HasError)
                 {
+                    // move offset forward to this message's offset + 1
+                    this.confluentConsumer.CommitAsync(new[]
+                    {
+                        new TopicPartitionOffset(topicPartition, offset + 1L)
+                    }).Wait();
                     return;
                 }
 
-                this.logger.KafkaLogCritical("Critical Error when retrying to send message. Topic: {topic} | Message: {message} | Timestamp: {timestamp} | Error: {error}", message.Topic, messageContent, report.Timestamp, report.Error);
+                this.logger.KafkaLogCritical("Critical Error when retrying to send message. Topic: {topic} | Message: {message} | Timestamp: {timestamp} | Error: {error}", topicName, messageValue, report.Timestamp, report.Error);
             }
+        }
+
+        protected void RequeueMessageOnError(Message<string, MessageWrapper> message)
+        {
+            this.RequeueMessageOnError(message.Topic, message.TopicPartition, message.Offset, message.Key, message.Value);
         }
 
         /// <summary>
@@ -208,15 +234,30 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// <param name="consumerMessage">Message envelope with key value pair content.</param>
         protected void HandleMessage(object sender, Message<string, MessageWrapper> consumerMessage)
         {
-            if (consumerMessage.Value == null)
+            try
             {
-                this.logger.KafkaLogInfo("ConsumerMessage has no content: {consumerMessage}", consumerMessage);
-                return;
+                if (consumerMessage.Value == null)
+                {
+                    this.logger.KafkaLogInfo("ConsumerMessage has no content: {consumerMessage}", consumerMessage);
+                }
+                else
+                {
+                    var wrappedMessage = consumerMessage.Value;
+                    this.CallHandler(wrappedMessage);
+                }
+
+                this.confluentConsumer.CommitAsync(consumerMessage).Wait();
             }
-
-            var wrappedMessage = consumerMessage.Value;
-
-            this.CallHandler(wrappedMessage);
+            catch (InternalConsumerException)
+            {
+                this.logger.KafkaLogWarning("Handler returned false while handling message {message}", consumerMessage);
+                this.RequeueMessageOnError(consumerMessage);
+            }
+            catch (Exception ex)
+            {
+                this.logger.KafkaLogError("Exception occured while handling message {message}: {exception}", consumerMessage, ex);
+                this.RequeueMessageOnError(consumerMessage);
+            }
         }
 
         protected void CallHandler(MessageWrapper wrappedMessage)
@@ -229,7 +270,7 @@ namespace PetProjects.Framework.Kafka.Consumer
                 return;
             }
 
-            this.messageHandlers[type].DynamicInvoke(wrappedMessage.Message);
+            this.messageHandlers[type](wrappedMessage.Message);
         }
     }
 }

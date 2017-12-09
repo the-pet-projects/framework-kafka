@@ -24,16 +24,7 @@
 
             var consumer = serviceProvider.GetService<IConsumer<ItemCommandsV1>>();
 
-            consumer.Receive<CreateItemV1>((message) =>
-            {
-                HandleCreateItem(message);
-                var committedOffsets = consumer.CommitAsync().Result;
-
-                if (committedOffsets.Offsets.Any())
-                {
-                    Console.WriteLine($"CommittedOffsets: {JsonConvert.SerializeObject(committedOffsets)}");
-                }
-            });
+            consumer.Receive<CreateItemV1>(HandleCreateItem);
 
             consumer.StartConsuming();
 
