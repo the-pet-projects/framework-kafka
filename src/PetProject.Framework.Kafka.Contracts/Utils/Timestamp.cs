@@ -14,9 +14,14 @@
         /// </summary>
         public Timestamp()
         {
-            this.UnixTimeEpochTimestamp = (long)(DateTime.UtcNow - UnixTimeEpoch).TotalMilliseconds;
+            this.UnixTimeEpochTimestamp = CalculateMicroseconds();
         }
 
         public long UnixTimeEpochTimestamp { get; set; }
+
+        private static long CalculateMicroseconds()
+        {
+            return (DateTime.UtcNow - UnixTimeEpoch).Ticks / (TimeSpan.TicksPerMillisecond / 1000);
+        }
     }
 }
