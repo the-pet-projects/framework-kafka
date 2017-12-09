@@ -2,8 +2,8 @@
 {
     public abstract class TopicBase<TMessage> : ITopic<TMessage>
     {
-        public abstract TopicBuilder SetupTopicBuilder();
-
         public string Name => this.SetupTopicBuilder().TopicFullName;
+
+        public abstract TopicBuilder SetupTopicBuilder();
     }
 }
