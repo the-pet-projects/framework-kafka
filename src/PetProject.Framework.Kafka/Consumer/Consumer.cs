@@ -202,6 +202,7 @@ namespace PetProjects.Framework.Kafka.Consumer
                 this.logger.KafkaLogCritical("Critical Error when retrying to send message. Topic: {topic} | Message: {message} | Timestamp: {timestamp} | Error: {error}", topicName, messageValue, report.Timestamp, report.Error);
             }
         }
+
         protected void RequeueMessageOnError(Message<string, MessageWrapper> message)
         {
             this.RequeueMessageOnError(message.Topic, message.TopicPartition, message.Offset, message.Key, message.Value);
