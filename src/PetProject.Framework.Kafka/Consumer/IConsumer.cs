@@ -14,8 +14,14 @@ namespace PetProjects.Framework.Kafka.Consumer
         void StartConsuming();
 
         /// <summary>
-        /// Handler for each message to be consumed inside the topic.
+        /// Handler for each message to be consumed inside the topic. If handler doesn't throw exception, message will be commited.
         /// </summary>
         void Receive<TMessage>(Action<TMessage> handler);
+
+        /// <summary>
+        /// Handler for each message to be consumed inside the topic.
+        /// Return type of handler should be a boolean that will be used to determine if message is to be commited or not.
+        /// </summary>
+        void Receive<TMessage>(Func<TMessage, bool> handler);
     }
 }

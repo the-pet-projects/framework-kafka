@@ -13,6 +13,7 @@ namespace PetProjects.Framework.Kafka.Consumer
     using PetProjects.Framework.Kafka.Configurations.Consumer;
     using PetProjects.Framework.Kafka.Configurations.Producer;
     using PetProjects.Framework.Kafka.Contracts.Topics;
+    using PetProjects.Framework.Kafka.Exceptions;
     using PetProjects.Framework.Kafka.Logging;
     using PetProjects.Framework.Kafka.Serializer;
     using PetProjects.Framework.Kafka.Wrapper;
@@ -25,7 +26,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         private readonly bool allowRetries;
         private readonly IConsumerConfiguration configuration;
         private readonly CancellationTokenSource tokenSource;
-        private readonly Dictionary<Type, Delegate> messageHandlers;
+        private readonly Dictionary<Type, Action<object>> messageHandlers;
         private readonly ITopic<TBaseMessage> topic;
 
         private Consumer<string, MessageWrapper> confluentConsumer;
@@ -36,7 +37,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         {
             this.logger = new GenericKafkaLog(logger);
             this.allowRetries = allowRetries;
-            this.messageHandlers = new Dictionary<Type, Delegate>();
+            this.messageHandlers = new Dictionary<Type, Action<object>>();
             this.tokenSource = new CancellationTokenSource();
             this.configuration = configuration;
             this.topic = topic;
@@ -81,11 +82,29 @@ namespace PetProjects.Framework.Kafka.Consumer
 
         /// <inheritdoc />
         /// <summary>
-        /// Handler for each message to be consumed inside the topic.
+        /// Handler for each message to be consumed inside the topic. If handler doesn't throw exception, message will be commited.
         /// </summary>
         public void Receive<TMessage>(Action<TMessage> handler)
         {
-            this.messageHandlers[typeof(TMessage)] = handler;
+            this.messageHandlers[typeof(TMessage)] = msg => handler((TMessage) msg);
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Handler for each message to be consumed inside the topic.
+        /// Return type of handler should be a boolean that will be used to determine if message is to be commited or not.
+        /// </summary>
+        public void Receive<TMessage>(Func<TMessage, bool> handler)
+        {
+            this.messageHandlers[typeof(TMessage)] = msg =>
+            {
+                var result = handler((TMessage) msg);
+
+                if (!result)
+                {
+                    throw new InternalConsumerException();
+                }
+            };
         }
 
         public void Dispose()
@@ -229,6 +248,11 @@ namespace PetProjects.Framework.Kafka.Consumer
 
                 this.confluentConsumer.CommitAsync(consumerMessage).Wait();
             }
+            catch (InternalConsumerException)
+            {
+                this.logger.KafkaLogWarning("Handler returned false while handling message {message}", consumerMessage);
+                this.RequeueMessageOnError(consumerMessage);
+            }
             catch (Exception ex)
             {
                 this.logger.KafkaLogError("Exception occured while handling message {message}: {exception}", consumerMessage, ex);
@@ -246,7 +270,7 @@ namespace PetProjects.Framework.Kafka.Consumer
                 return;
             }
 
-            this.messageHandlers[type].DynamicInvoke(wrappedMessage.Message);
+            this.messageHandlers[type](wrappedMessage.Message);
         }
     }
 }
