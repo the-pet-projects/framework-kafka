@@ -2,8 +2,8 @@
 {
     public interface ITopic<TMessage>
     {
-        TopicBuilder SetTopicName();
+        string Name { get; }
 
-        string GetTopicName();
+        TopicBuilder SetupTopicBuilder();
     }
 }

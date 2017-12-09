@@ -33,23 +33,21 @@ namespace PetProjects.Framework.Kafka.Producer
         public void Produce<TMessage>(TMessage message, IDeliveryHandler<string, MessageWrapper> deliveryHandler = null)
             where TMessage : IMessage
         {
-            var topicName = this.topic.GetTopicName();
             var partitionKey = message.GetPartitionKey();
 
             var wrappedMessage = MessageWrapperFactory.Create(message);
 
-            this.confluentProducer.ProduceAsync(topicName, partitionKey, wrappedMessage, deliveryHandler);
+            this.confluentProducer.ProduceAsync(this.topic.Name, partitionKey, wrappedMessage, deliveryHandler);
         }
 
         public async Task<Message<string, MessageWrapper>> ProduceAsync<TMessage>(TMessage message)
             where TMessage : IMessage
         {
-            var topicName = this.topic.GetTopicName();
             var partitionKey = message.GetPartitionKey();
 
             var wrappedMessage = MessageWrapperFactory.Create(message);
 
-            var deliveryReport = await this.confluentProducer.ProduceAsync(topicName, partitionKey, wrappedMessage);
+            var deliveryReport = await this.confluentProducer.ProduceAsync(this.topic.Name, partitionKey, wrappedMessage);
 
             return deliveryReport;
         }

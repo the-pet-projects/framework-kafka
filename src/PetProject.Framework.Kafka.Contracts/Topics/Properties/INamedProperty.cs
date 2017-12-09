@@ -3,7 +3,5 @@
     public interface INamedProperty
     {
         string Name { get; }
-
-        string GetName();
     }
 }

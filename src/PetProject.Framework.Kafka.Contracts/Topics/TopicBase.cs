@@ -2,15 +2,8 @@
 {
     public abstract class TopicBase<TMessage> : ITopic<TMessage>
     {
-        protected TopicBase(string environment)
-        {
-            this.Environment = environment;
-        }
+        public abstract TopicBuilder SetupTopicBuilder();
 
-        public string Environment { get; set; }
-
-        public abstract TopicBuilder SetTopicName();
-
-        public string GetTopicName() => this.SetTopicName().TopicFullName;
+        public string Name => this.SetupTopicBuilder().TopicFullName;
     }
 }
