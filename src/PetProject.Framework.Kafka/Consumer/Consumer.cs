@@ -111,15 +111,6 @@ namespace PetProjects.Framework.Kafka.Consumer
             this.tokenSource?.Dispose();
         }
 
-        /// <inheritdoc />
-        /// <summary>
-        /// Decorator around Confluent Consumer to commit messages asynchronously after success.
-        /// </summary>
-        public Task<CommittedOffsets> CommitAsync()
-        {
-            return this.confluentConsumer.CommitAsync();
-        }
-
         /// <summary>
         /// Method to add custom treatment to Consumer Statistics.
         /// </summary>
@@ -181,24 +172,39 @@ namespace PetProjects.Framework.Kafka.Consumer
             }
         }
 
+        protected void RequeueMessageOnError(Message message)
+        {
+            var key = new StringDeserializer(Encoding.UTF8).Deserialize(message.Topic, message.Key);
+            var messageContent = new JsonDeserializer<MessageWrapper>().Deserialize(message.Topic, message.Value);
+
+            this.RequeueMessageOnError(message.Topic, message.TopicPartition, message.Offset, key, messageContent);
+        }
+
         // It's ugly I know, I will beautify the shit out this later. for now it does the work.
-        protected virtual void RequeueMessageOnError(Message message)
+        protected virtual void RequeueMessageOnError(string topicName, TopicPartition topicPartition, Offset offset, string key, MessageWrapper messageValue)
         {
             var bootstrapServers = this.configuration.GetConfigurations()["bootstrap.servers"] as string;
+
             using (var producer = new Producer<string, MessageWrapper>(new ProducerConfiguration($"retry-producer-{Guid.NewGuid()}", bootstrapServers).GetConfigurations(), new StringSerializer(Encoding.UTF8), new JsonSerializer<MessageWrapper>()))
             {
-                var key = new StringDeserializer(Encoding.UTF8).Deserialize(message.Topic, message.Key);
-                var messageContent = new JsonDeserializer<MessageWrapper>().Deserialize(message.Topic, message.Value);
-
-                var report = producer.ProduceAsync(message.Topic, key, messageContent).Result;
+                var report = producer.ProduceAsync(topicName, key, messageValue).Result;
 
                 if (!report.Error.HasError)
                 {
+                    // move offset forward to this message's offset + 1
+                    this.confluentConsumer.CommitAsync(new[]
+                    {
+                        new TopicPartitionOffset(topicPartition, offset + 1L)
+                    }).Wait();
                     return;
                 }
 
-                this.logger.KafkaLogCritical("Critical Error when retrying to send message. Topic: {topic} | Message: {message} | Timestamp: {timestamp} | Error: {error}", message.Topic, messageContent, report.Timestamp, report.Error);
+                this.logger.KafkaLogCritical("Critical Error when retrying to send message. Topic: {topic} | Message: {message} | Timestamp: {timestamp} | Error: {error}", topicName, messageValue, report.Timestamp, report.Error);
             }
+        }
+        protected void RequeueMessageOnError(Message<string, MessageWrapper> message)
+        {
+            this.RequeueMessageOnError(message.Topic, message.TopicPartition, message.Offset, message.Key, message.Value);
         }
 
         /// <summary>
@@ -208,15 +214,25 @@ namespace PetProjects.Framework.Kafka.Consumer
         /// <param name="consumerMessage">Message envelope with key value pair content.</param>
         protected void HandleMessage(object sender, Message<string, MessageWrapper> consumerMessage)
         {
-            if (consumerMessage.Value == null)
+            try
             {
-                this.logger.KafkaLogInfo("ConsumerMessage has no content: {consumerMessage}", consumerMessage);
-                return;
+                if (consumerMessage.Value == null)
+                {
+                    this.logger.KafkaLogInfo("ConsumerMessage has no content: {consumerMessage}", consumerMessage);
+                }
+                else
+                {
+                    var wrappedMessage = consumerMessage.Value;
+                    this.CallHandler(wrappedMessage);
+                }
+
+                this.confluentConsumer.CommitAsync(consumerMessage).Wait();
             }
-
-            var wrappedMessage = consumerMessage.Value;
-
-            this.CallHandler(wrappedMessage);
+            catch (Exception ex)
+            {
+                this.logger.KafkaLogError("Exception occured while handling message {message}: {exception}", consumerMessage, ex);
+                this.RequeueMessageOnError(consumerMessage);
+            }
         }
 
         protected void CallHandler(MessageWrapper wrappedMessage)
