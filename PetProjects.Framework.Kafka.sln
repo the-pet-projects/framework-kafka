@@ -17,11 +17,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration", "integration"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Integration.Contracts", "test\integration\Integration.Contracts\Integration.Contracts.csproj", "{5B6403FD-3EF1-4628-8DC6-F22CFC8BC05E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration", "integration", "{8713E795-7AE5-49DC-8A2E-947B8D494689}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Integration.Consumer", "test\integration\Integration.Consumer\Integration.Consumer.csproj", "{A5282238-E956-4EBF-A6C6-1BFCFD63E223}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Integration.Consumer", "test\integration\Integration.Consumer\Integration.Consumer.csproj", "{A5282238-E956-4EBF-A6C6-1BFCFD63E223}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Integration.Producer", "test\integration\Integration.Producer\Integration.Producer.csproj", "{28F3E351-CE88-46C0-9529-508A4B6E2DAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Integration.Producer", "test\integration\Integration.Producer\Integration.Producer.csproj", "{28F3E351-CE88-46C0-9529-508A4B6E2DAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
