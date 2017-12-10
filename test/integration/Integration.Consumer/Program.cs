@@ -13,7 +13,7 @@
     {
         private static readonly ManualResetEvent QuitEvent = new ManualResetEvent(false);
 
-        private static async Task Main(string[] args)
+        private static void Main(string[] args)
         {
             Console.WriteLine("Consumer");
 
