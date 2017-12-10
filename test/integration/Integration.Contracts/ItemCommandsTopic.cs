@@ -4,9 +4,9 @@
 
     public class ItemCommandsTopic : TopicBase<ItemCommandsV1>
     {
-        public override TopicBuilder SetupTopicBuilder()
+        public ItemCommandsTopic()
+            : base(new TopicConfig(nameof(CreateItemV1), MessageType.Commands, "console-app-test", "dev", 1))
         {
-            return new TopicBuilder(new TopicConfig(nameof(CreateItemV1), MessageType.Commands, "console-app-test", "dev", 1));
         }
     }
 }

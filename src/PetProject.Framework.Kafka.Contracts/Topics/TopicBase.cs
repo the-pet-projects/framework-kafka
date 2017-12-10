@@ -2,8 +2,18 @@
 {
     public abstract class TopicBase<TMessage> : ITopic<TMessage>
     {
+        private readonly TopicConfig config;
+
+        protected TopicBase(TopicConfig config)
+        {
+            this.config = config;
+        }
+
         public string Name => this.SetupTopicBuilder().TopicFullName;
 
-        public abstract TopicBuilder SetupTopicBuilder();
+        public TopicBuilder SetupTopicBuilder()
+        {
+            return new TopicBuilder(this.config);
+        }
     }
 }
