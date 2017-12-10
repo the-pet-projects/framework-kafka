@@ -107,6 +107,19 @@ namespace PetProjects.Framework.Kafka.Consumer
             };
         }
 
+        public void TryReceiveAsync<TMessage>(Func<TMessage, Task<bool>> handler)
+        {
+            this.messageHandlers[typeof(TMessage)] = async msg =>
+             {
+                 var result = await handler((TMessage)msg);
+
+                 if (!result)
+                 {
+                     throw new InternalConsumerException();
+                 }
+             };
+        }
+
         public void Dispose()
         {
             if (this.consumerTask != null)

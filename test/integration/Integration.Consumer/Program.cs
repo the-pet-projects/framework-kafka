@@ -1,13 +1,10 @@
 ﻿namespace Integration.Consumer
 {
     using System;
-
-    using System.Linq;
     using System.Threading;
-
-    using Integration.Consumer.Configs;
-    using Integration.Contracts;
-
+    using System.Threading.Tasks;
+    using Configs;
+    using Contracts;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using PetProjects.Framework.Kafka.Consumer;
@@ -16,15 +13,15 @@
     {
         private static readonly ManualResetEvent QuitEvent = new ManualResetEvent(false);
 
-        public static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             Console.WriteLine("Consumer");
 
             var serviceProvider = new Configurations().ServiceProvider;
 
             var consumer = serviceProvider.GetService<IConsumer<ItemCommandsV1>>();
-
-            consumer.Receive<CreateItemV1>(HandleCreateItem);
+            
+            consumer.TryReceiveAsync<CreateItemV1>(async (command) => await Program.HandleCreateItemAsync(command));
 
             consumer.StartConsuming();
 
@@ -40,6 +37,13 @@
 
             consumer.Dispose();
             Console.WriteLine("Terminating consumer.");
+        }
+
+        private static Task<bool> HandleCreateItemAsync(CreateItemV1 command)
+        {
+            Console.WriteLine($"Message: {JsonConvert.SerializeObject(command)} |  Partition: {command.GetPartitionKey()} | Derived: {command.Derived}");
+
+            return Task.FromResult(command != null);
         }
 
         private static void HandleCreateItem(CreateItemV1 message)
