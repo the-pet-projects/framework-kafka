@@ -2,19 +2,11 @@
 {
     using PetProjects.Framework.Kafka.Contracts.Topics;
 
-    public class ItemCommandsTopic : ITopic<ItemCommandsV1>
+    public class ItemCommandsTopic : TopicBase<ItemCommandsV1>
     {
-        public ItemCommandsTopic()
+        public override TopicBuilder SetupTopicBuilder()
         {
-        }
-
-        public string TopicFullName => this.SetTopicName().TopicFullName;
-
-        public TopicBuilder SetTopicName()
-        {
-            return new TopicBuilder($"{typeof(ItemCommandsV1).FullName}", MessageType.Commands)
-                .WithApplication("console-app-test")
-                .WithVersion(1);
+            return new TopicBuilder(new TopicConfig(nameof(CreateItemV1), MessageType.Commands, "console-app-test", "dev", 1));
         }
     }
 }

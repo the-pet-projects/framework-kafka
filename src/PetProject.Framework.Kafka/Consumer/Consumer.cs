@@ -69,7 +69,7 @@ namespace PetProjects.Framework.Kafka.Consumer
 
                 this.confluentConsumer.OnStatistics += this.HandleStatistics;
 
-                this.confluentConsumer.Subscribe(this.topic.TopicFullName);
+                this.confluentConsumer.Subscribe(this.topic.Name);
 
                 while (this.tokenSource != null && !this.tokenSource.IsCancellationRequested)
                 {
