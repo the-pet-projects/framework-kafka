@@ -111,7 +111,7 @@ namespace PetProjects.Framework.Kafka.Consumer
         {
             this.messageHandlers[typeof(TMessage)] = async msg =>
              {
-                 var result = await handler((TMessage)msg);
+                 var result = await handler((TMessage)msg).ConfigureAwait(false);
 
                  if (!result)
                  {
