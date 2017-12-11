@@ -1,6 +1,5 @@
 namespace PetProjects.Framework.Kafka.Producer
 {
-    using System;
     using System.Text;
     using System.Threading.Tasks;
 
@@ -18,16 +17,12 @@ namespace PetProjects.Framework.Kafka.Producer
         private readonly Producer<string, MessageWrapper> confluentProducer;
 
         private readonly ITopic<TBaseMessage> topic;
-        private readonly IProducerConfiguration configuration;
-
-        private bool disposed;
 
         public Producer(ITopic<TBaseMessage> topic, IProducerConfiguration configuration)
         {
             this.confluentProducer = new Producer<string, MessageWrapper>(configuration.GetConfigurations(), new StringSerializer(Encoding.UTF8), new JsonSerializer<MessageWrapper>());
 
             this.topic = topic;
-            this.configuration = configuration;
         }
 
         public void Produce<TMessage>(TMessage message, IDeliveryHandler<string, MessageWrapper> deliveryHandler = null)
@@ -47,30 +42,14 @@ namespace PetProjects.Framework.Kafka.Producer
 
             var wrappedMessage = MessageWrapperFactory.Create(message);
 
-            var deliveryReport = await this.confluentProducer.ProduceAsync(this.topic.Name, partitionKey, wrappedMessage);
+            var deliveryReport = await this.confluentProducer.ProduceAsync(this.topic.Name, partitionKey, wrappedMessage).ConfigureAwait(false);
 
             return deliveryReport;
         }
 
         public void Dispose()
         {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (this.disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                this.Dispose();
-            }
-
-            this.disposed = true;
+            this.confluentProducer?.Dispose();
         }
     }
 }
